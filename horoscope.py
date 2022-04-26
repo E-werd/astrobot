@@ -23,9 +23,9 @@ data["signs"] = {"aries" : {},\
 def updateHoro(file):
     for s in data["signs"]:
         req = requests.get(urlBase + s + "/")
-        j = json.loads(req.text)
-        data["signs"][s]["date"] = j["date"]
-        data["signs"][s]["horoscope"] = j["horoscope"]
+        d = json.loads(req.text)
+        data["signs"][s]["date"] = d["date"]
+        data["signs"][s]["horoscope"] = d["horoscope"]
 
     with open(file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
@@ -48,6 +48,6 @@ def loadData(file):
             d = json.load(f)
     return d
         
-def getHoro(sign, f):
-    d = loadData(f)
+def getHoro(sign, file):
+    d = loadData(file)
     return d["signs"][sign]
