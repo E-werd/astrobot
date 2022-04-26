@@ -1,4 +1,4 @@
-**AstoBot**
+**AstroBot**
 
 This is a simple discord bot that adds the ```/horoscope``` command.  The horoscope data is pulled from an unofficial repository that scrapes astrology.com.  The API is located here: http://ohmanda.com/api/horoscope/
 
