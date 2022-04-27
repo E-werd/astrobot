@@ -35,10 +35,13 @@ bot = interactions.Client(token=TOKEN)
         ),
     ],
 )
-
 async def horoscope(ctx: interactions.CommandContext, sign: str):
     h = getHoro(sign, FILE)
     await ctx.send(sign.capitalize() + " for " + h["date"] + ": \n\n" + h["horoscope"])
+
+@bot.event
+async def on_ready():
+    print("Logged on as:" + bot.me.name)
 
 # Startup
 print("Checking local data...")
