@@ -28,7 +28,7 @@ def updateHoro(file):
         data["signs"][s]["horoscope"] = d["horoscope"]
 
     with open(file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 def checkData(file):
     if path.exists(file):

@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
+import logging
 import interactions
 from os import getenv
 from dotenv import load_dotenv
 from horoscope import getHoro, updateHoro, checkData
 
+# Vars
 load_dotenv()
 TOKEN = getenv("TOKEN")
 FILE = getenv("DATAFILE")
+LOGLEVEL = getenv("LOGLEVEL")
 bot = interactions.Client(token=TOKEN)
 
+# Logging
+logopt = { "debug" : logging.DEBUG, "info" : logging.INFO, "error" : logging.ERROR }
+logging.basicConfig(level=logopt.get(LOGLEVEL, logging.ERROR))
+
+# Commands/Events
 @bot.command(
     name="horoscope",
     description="Show horoscope for specified sign",
