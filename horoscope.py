@@ -1,9 +1,6 @@
 import requests, json
-from os import path, getenv
-from dotenv import load_dotenv
+from os import path
 
-load_dotenv()
-FILE = getenv('DATAFILE')
 urlBase = "https://ohmanda.com/api/horoscope/"
 data = {"signs" : {}}
 data["signs"] = {"aries" : {},\

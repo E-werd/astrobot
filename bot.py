@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-import logging
-import interactions
-from os import getenv
-from dotenv import load_dotenv
+import logging, interactions, sys
 from horoscope import getHoro, updateHoro, checkData
+from dotenv import load_dotenv
+from os import getenv
 
 # Vars
 load_dotenv()
-TOKEN = getenv("TOKEN")
-FILE = getenv("DATAFILE")
-LOGLEVEL = getenv("LOGLEVEL")
-bot = interactions.Client(token=TOKEN)
+TOKEN = getenv("TOKEN", default="none")
+FILE = getenv("DATAFILE", default="data.json")
+LOGLEVEL = getenv("LOGLEVEL", default="error")
+
+if TOKEN == "none":
+    logging.critical("Missing token! Set TOKEN in .env, see .env.example")
+    sys.exit("Exiting.")
 
 # Logging
 logopt = { "debug" : logging.DEBUG, "info" : logging.INFO, "error" : logging.ERROR }
 logging.basicConfig(level=logopt.get(LOGLEVEL, logging.ERROR))
 
-# Commands/Events
+# Bot stuff
+bot = interactions.Client(token=TOKEN)
+
 @bot.command(
     name="horoscope",
     description="Show horoscope for specified sign",

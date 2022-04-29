@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from os import getenv
 
 load_dotenv()
-FILE = getenv('DATAFILE')
+FILE = getenv("DATAFILE", default="data.json")
 
 print("Updating data...")
 updateHoro(FILE)
