@@ -47,6 +47,7 @@ bot = interactions.Client(token=TOKEN)
         ),
     ],
 )
+@interactions.autodefer()
 async def horoscope(ctx: interactions.CommandContext, sign: str):
     h = getHoro(sign, FILE)
     await ctx.send(sign.capitalize() + " for " + h["date"] + ": \n\n" + h["horoscope"])
