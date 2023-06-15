@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import logging, interactions, sys
+import logging, sys
+from interactions import Client, Intents, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
 from horoscope import getHoro, updateHoro, checkData
 from dotenv import load_dotenv
 from os import getenv
@@ -19,40 +20,37 @@ logopt = { "debug" : logging.DEBUG, "info" : logging.INFO, "error" : logging.ERR
 logging.basicConfig(level=logopt.get(LOGLEVEL, logging.ERROR))
 
 # Bot stuff
-bot = interactions.Client(token=TOKEN)
+bot = Client(token=TOKEN)
 
-@bot.command(
-    name="horoscope",
-    description="Show horoscope for specified sign",
-    options =[
-        interactions.Option(
-            name="sign",
-            description="zodiac sign",
-            type=interactions.OptionType.STRING,
-            required=True,
-            choices=[
-                interactions.Choice(name="♈ Aries", value="aries"),
-                interactions.Choice(name="♉ Taurus", value="taurus"),
-                interactions.Choice(name="♊ Gemini", value="gemini"),
-                interactions.Choice(name="♋ Cancer", value="cancer"),
-                interactions.Choice(name="♌ Leo", value="leo"),
-                interactions.Choice(name="♍ Virgo", value="virgo"),
-                interactions.Choice(name="♎ Libra", value="libra"),
-                interactions.Choice(name="♏ Scorpio", value="scorpio"),
-                interactions.Choice(name="♐ Sagittarius", value="sagittarius"),
-                interactions.Choice(name="♑ Capricorn", value="capricorn"),
-                interactions.Choice(name="♒ Aquarius", value="aquarius"),
-                interactions.Choice(name="♓ Pisces", value="pisces"),
-            ]
-        ),
-    ],
-)
-@interactions.autodefer()
-async def horoscope(ctx: interactions.CommandContext, sign: str):
+@slash_command(
+        name="horoscope",
+        description="Show horoscope for specified sign"
+        )
+@slash_option(
+        name="sign",
+        description="zodiac sign",
+        opt_type=OptionType.STRING,
+        required=True,
+        choices=[
+            SlashCommandChoice(name="♈ Aries", value="aries"),
+            SlashCommandChoice(name="♉ Taurus", value="taurus"),
+            SlashCommandChoice(name="♊ Gemini", value="gemini"),
+            SlashCommandChoice(name="♋ Cancer", value="cancer"),
+            SlashCommandChoice(name="♌ Leo", value="leo"),
+            SlashCommandChoice(name="♍ Virgo", value="virgo"),
+            SlashCommandChoice(name="♎ Libra", value="libra"),
+            SlashCommandChoice(name="♏ Scorpio", value="scorpio"),
+            SlashCommandChoice(name="♐ Sagittarius", value="sagittarius"),
+            SlashCommandChoice(name="♑ Capricorn", value="capricorn"),
+            SlashCommandChoice(name="♒ Aquarius", value="aquarius"),
+            SlashCommandChoice(name="♓ Pisces", value="pisces"),
+        ]
+        )
+async def horoscope(ctx: SlashContext, sign: str):
     h = getHoro(sign, FILE)
-    await ctx.send(sign.capitalize() + " for " + h["date"] + ": \n\n" + h["horoscope"])
+    await ctx.send("__**" + sign.capitalize() + "**" + " for " + "*" + h["date"] + "*__: " +  "\n" + h["horoscope"])
 
-@bot.event
+@listen()
 async def on_ready():
     print("Logged on as:" + bot.me.name)
 
