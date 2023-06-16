@@ -1,7 +1,8 @@
 import requests, json
 from os import path
+from bs4 import BeautifulSoup
 
-urlBase = "https://ohmanda.com/api/horoscope/"
+urlBase = "https://www.astrology.com/horoscope/daily/"
 data = {"signs" : {}}
 data["signs"] = {"aries" : {},\
     "taurus" : {},\
@@ -19,10 +20,13 @@ data["signs"] = {"aries" : {},\
 
 def updateHoro(file):
     for s in data["signs"]:
-        req = requests.get(urlBase + s + "/")
-        d = json.loads(req.text)
-        data["signs"][s]["date"] = d["date"]
-        data["signs"][s]["horoscope"] = d["horoscope"]
+        req = requests.get(urlBase + s + ".html")
+        soup = BeautifulSoup(req.text, "html.parser")
+        content = soup.find(id="content")
+
+        data["signs"][s]["name"] = str(s).capitalize()
+        data["signs"][s]["date"] = soup.find(id="content-date").text
+        data["signs"][s]["horoscope"] = content.find("span").text.strip()
 
     with open(file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

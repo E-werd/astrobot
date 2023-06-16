@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import logging, sys
-from interactions import Client, Intents, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
+from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
 from horoscope import getHoro, updateHoro, checkData
 from dotenv import load_dotenv
 from os import getenv
@@ -48,11 +48,11 @@ bot = Client(token=TOKEN)
         )
 async def horoscope(ctx: SlashContext, sign: str):
     h = getHoro(sign, FILE)
-    await ctx.send("__**" + sign.capitalize() + "**" + " for " + "*" + h["date"] + "*__: " +  "\n" + h["horoscope"])
+    await ctx.send("__**" + h["name"] + "**" + " for " + "*" + h["date"] + "*__: " +  "\n" + h["horoscope"])
 
 @listen()
-async def on_ready():
-    print("Logged on as:" + bot.me.name)
+async def on_ready(self):
+    print("Logged on as: " + bot.app.name)
 
 # Startup
 print("Checking local data...")
