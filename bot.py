@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging, sys
-from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
-from horoscope import getHoro, updateHoro, checkData
+from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext, Member
+from horoscope import getHoro, loadData
 from dotenv import load_dotenv
 from os import getenv
 
@@ -46,18 +46,28 @@ bot = Client(token=TOKEN)
             SlashCommandChoice(name="♓ Pisces", value="pisces"),
         ]
         )
-async def horoscope(ctx: SlashContext, sign: str):
+@slash_option(
+        name="when",
+        description="when",
+        opt_type=OptionType.STRING,
+        required=False,
+        choices=[
+            SlashCommandChoice(name="Today", value="today"),
+            SlashCommandChoice(name="Tomorrow", value="tomorrow"),
+            SlashCommandChoice(name="Yesterday", value="yesterday"),
+        ]
+        )
+async def horoscope(ctx: SlashContext, sign: str, when: str = "today"):
     h = getHoro(sign, FILE)
-    await ctx.send("__**" + h["name"] + "**" + " for " + "*" + h["date"] + "*__: " +  "\n" + h["horoscope"])
+    await ctx.send("__**" + h["name"] + "**" + " for " + "*" + h[when]["date"] + "*__: " +  "\n" + h[when]["horoscope"])
 
 @listen()
 async def on_ready(self):
     print("Logged on as: " + bot.app.name)
 
 # Startup
-print("Checking local data...")
-if not checkData(FILE):
-    updateHoro(FILE)
+print("Loading data...")
+loadData(FILE)
 print("Done.")
 
 print("Starting bot...")
