@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import logging, sys
-from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext, Member
-from horoscope import getHoro, loadData
+from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
+from horoscope import getHoro, preloadData
 from dotenv import load_dotenv
 from os import getenv
 
@@ -15,9 +15,11 @@ if TOKEN == "none":
     logging.critical("Missing token! Set TOKEN in .env, see .env.example")
     sys.exit("Exiting.")
 
+style_string = {"daily": "Daily", "daily-love": "Daily Love"}
+
 # Logging
-logopt = { "debug" : logging.DEBUG, "info" : logging.INFO, "error" : logging.ERROR }
-logging.basicConfig(level=logopt.get(LOGLEVEL, logging.ERROR))
+logopt = { "debug": logging.DEBUG, "info": logging.INFO, "warning": logging.WARNING , "error": logging.ERROR, "critical": logging.CRITICAL }
+logging.basicConfig(level=logopt.get(LOGLEVEL, logging.INFO))
 
 # Bot stuff
 bot = Client(token=TOKEN)
@@ -47,28 +49,38 @@ bot = Client(token=TOKEN)
         ]
         )
 @slash_option(
-        name="when",
-        description="when",
+        name="day",
+        description="day",
         opt_type=OptionType.STRING,
         required=False,
         choices=[
-            SlashCommandChoice(name="Today", value="today"),
-            SlashCommandChoice(name="Tomorrow", value="tomorrow"),
-            SlashCommandChoice(name="Yesterday", value="yesterday"),
+            SlashCommandChoice(name="▶️ Today", value="today"),
+            SlashCommandChoice(name="⏭️ Tomorrow", value="tomorrow"),
+            SlashCommandChoice(name="⏮️ Yesterday", value="yesterday"),
         ]
         )
-async def horoscope(ctx: SlashContext, sign: str, when: str = "today"):
+@slash_option(
+        name="style",
+        description="horoscope style",
+        opt_type=OptionType.STRING,
+        required=False,
+        choices=[
+            SlashCommandChoice(name="🌅 Daily", value="daily"),
+            SlashCommandChoice(name="💗 Daily Love", value="daily-love"),
+        ]
+        )
+async def horoscope(ctx: SlashContext, sign: str, day: str = "today", style: str = "daily"):
     h = getHoro(sign, FILE)
-    await ctx.send("__**" + h["name"] + "**" + " for " + "*" + h[when]["date"] + "*__: " +  "\n" + h[when]["horoscope"])
+    await ctx.send("__" + style_string[style] + " Horoscope for **" + h["name"] + "**" + " for " + "*" + h[style][day]["date"] + "*__: " +  "\n" + h[style][day]["horoscope"])
 
 @listen()
 async def on_ready(self):
-    print("Logged on as: " + bot.app.name)
+    logging.info("Logged on as: " + bot.app.name)
 
 # Startup
-print("Loading data...")
-loadData(FILE)
-print("Done.")
+logging.info("Preloading data...")
+preloadData(FILE)
+logging.info("Done.")
 
-print("Starting bot...")
+logging.info("Starting bot...")
 bot.start()

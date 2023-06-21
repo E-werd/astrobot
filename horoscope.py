@@ -1,60 +1,89 @@
-import requests, json
+import requests, json, logging
 from os import path
 from bs4 import BeautifulSoup
 
-urlBase = "https://www.astrology.com/horoscope/"
+urlBase = "https://www.astrology.com/"
+urlDaily = urlBase + "horoscope/daily/"
+urlDailyLove = urlBase + "horoscope/daily-love/"
 signs = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+styles = ["daily", "daily-love"]
+days = ["yesterday", "today", "tomorrow"]
 data = {"signs": {}}
 
 for sign in signs:
     data["signs"][sign] = {}
     data["signs"][sign]["name"] = str(sign).capitalize()
-    data["signs"][sign]["yesterday"] = {"date": "", "horoscope": ""}
-    data["signs"][sign]["today"] = {"date": "", "horoscope": ""}
-    data["signs"][sign]["tomorrow"] = {"date": "", "horoscope": ""}
+    for style in styles:
+        data["signs"][sign][style] = {}
+        for day in days:
+            data["signs"][sign][style][day] = {}
+            data["signs"][sign][style][day] = {"date": "", "horoscope": ""}
 
-def scrapeData(sign: str, when: str, url: str):
+def scrapeData(sign: str, day: str, style: str):
+    url = ""
+    match style:
+        case "daily":
+            url = urlDaily + day + "/" + sign + ".html"
+        case "daily-love":
+            match day:
+                case "yesterday" | "tomorrow":
+                    url = urlDailyLove + day + "/" + sign + ".html"
+                case "today":
+                    url = urlDailyLove + sign + ".html"
+
     req = requests.get(url)
     soup = BeautifulSoup(req.text, "html.parser")
     content = soup.find(id="content")
 
-    data["signs"][sign][when]["date"] = soup.find(id="content-date").text  # type: ignore
-    data["signs"][sign][when]["horoscope"] = content.find("span").text.strip() # type: ignore
+    data["signs"][sign][style][day]["date"] = soup.find(id="content-date").text  # type: ignore
+
+    span = content.find_all("span") # type: ignore
+    horo = ""
+    for s in span:
+        horo += s.text
+    data["signs"][sign][style][day]["horoscope"] = horo # type: ignore
 
 def updateHoro(file: str):
-    for sign in data["signs"]:
-        today = urlBase + "daily/" + sign + ".html"
-        tomorrow = urlBase + "daily/tomorrow/" + sign + ".html"
-        yesterday = urlBase + "daily/yesterday/" + sign + ".html"
+    for sign in signs:
+        for style in styles:
+            for day in days:
+                logging.debug("Fetching " + style + " for " + sign + ":" + day)
+                scrapeData(sign=sign, style=style, day=day)
 
-        print("Fetching " + sign + ":today from: " + today)
-        scrapeData(sign=sign, url=today, when="today")
-        print("Fetching " + sign + ":tomorrow from: " + tomorrow)
-        scrapeData(sign=sign, url=tomorrow, when="tomorrow")
-        print("Fetching " + sign + ":yesterday from: " + yesterday)
-        scrapeData(sign=sign, url=yesterday, when="yesterday")
-
+    logging.info("Writing data to file: " + file)
     with open(file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    return True
 
 def checkData(file: str):
     if path.exists(file):
         return True
     else:
         return False
+    
+def preloadData(file: str):
+    if checkData(file=file):
+        logging.info("Data is good at: " + file)
+        return True
+    else:
+        logging.info("Data missing or incomplete.")
+        logging.info("Updating data...")
+        return updateHoro(file=file)
 
 def loadData(file: str):
     d = {}
-    if checkData(file):
+    if checkData(file=file):
+        logging.info("Loading data from: " + file)
         with open(file, "r", encoding="utf-8") as f:
             d = json.load(f)
     else:
-        print("Updating data...")
-        updateHoro(file)
+        logging.info("Updating data...")
+        updateHoro(file=file)
         with open(file, "r", encoding="utf-8") as f:
             d = json.load(f)
     return d
         
 def getHoro(sign: str, file: str):
-    d = loadData(file)
+    d = loadData(file=file)
     return d["signs"][sign]

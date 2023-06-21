@@ -1,4 +1,4 @@
-beautifulsoup4==4.10.0
-discord_py_interactions==5.7.0
-python-dotenv==1.0.0
-Requests==2.31.0
+beautifulsoup4>=4.10.0
+discord_py_interactions>=5.7.0
+python-dotenv>=1.0.0
+Requests>=2.31.0
