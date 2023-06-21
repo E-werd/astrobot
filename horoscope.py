@@ -14,10 +14,19 @@ for sign in signs:
     data["signs"][sign] = {}
     data["signs"][sign]["name"] = str(sign).capitalize()
     for style in styles:
-        data["signs"][sign][style] = {}
+        emoji = ""
+        match style:
+            case "daily": emoji = "🌅"
+            case "daily-love": emoji = "💗"
+        data["signs"][sign][style] = {"emoji": emoji}
         for day in days:
+            emoji = ""
+            match day:
+                case "today": emoji = "▶️"
+                case "tomorrow": emoji = "⏭️"
+                case "yesterday": emoji = "⏮️"
             data["signs"][sign][style][day] = {}
-            data["signs"][sign][style][day] = {"date": "", "horoscope": ""}
+            data["signs"][sign][style][day] = {"emoji": emoji, "date": "", "horoscope": ""}
 
 def scrapeData(sign: str, day: str, style: str):
     url = ""
@@ -48,7 +57,7 @@ def updateHoro(file: str):
         for style in styles:
             for day in days:
                 logging.debug("Fetching " + style + " for " + sign + ":" + day)
-                scrapeData(sign=sign, style=style, day=day)
+                scrapeData(sign=sign, day=day, style=style)
 
     logging.info("Writing data to file: " + file)
     with open(file, 'w', encoding='utf-8') as f:

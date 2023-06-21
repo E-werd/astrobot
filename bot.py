@@ -71,7 +71,7 @@ bot = Client(token=TOKEN)
         )
 async def horoscope(ctx: SlashContext, sign: str, day: str = "today", style: str = "daily"):
     h = getHoro(sign, FILE)
-    await ctx.send("__" + style_string[style] + " Horoscope for **" + h["name"] + "**" + " for " + "*" + h[style][day]["date"] + "*__: " +  "\n" + h[style][day]["horoscope"])
+    await ctx.send("### " + h[style]["emoji"] + " " + style_string[style] + " Horoscope for __" + h["name"] + "__" + " for " + "*" + h[style][day]["emoji"] + " " + h[style][day]["date"] + "*: " +  "\n" + h[style][day]["horoscope"])
 
 @listen()
 async def on_ready(self):
