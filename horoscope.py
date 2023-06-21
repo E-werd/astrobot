@@ -6,27 +6,19 @@ urlBase = "https://www.astrology.com/"
 urlDaily = urlBase + "horoscope/daily/"
 urlDailyLove = urlBase + "horoscope/daily-love/"
 signs = ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+symbols = {"aries": "♈", "taurus": "♉", "gemini": "♊", "cancer": "♋", "leo": "♌", "virgo": "♍", "libra": "♎", "scorpio": "♏", "sagittarius": "♐", "capricorn": "♑", "aquarius": "♒", "pisces": "♓"}
 styles = ["daily", "daily-love"]
+stylename = {"daily": "Daily", "daily-love": "Daily Love"}
 days = ["yesterday", "today", "tomorrow"]
+emojis = {"yesterday": "⏮️", "today": "▶️", "tomorrow": "⏭️", "daily": "🌅", "daily-love": "💗"}
 data = {"signs": {}}
 
 for sign in signs:
-    data["signs"][sign] = {}
-    data["signs"][sign]["name"] = str(sign).capitalize()
+    data["signs"][sign] = {"name": str(sign).capitalize(), "symbol": symbols[sign]}
     for style in styles:
-        emoji = ""
-        match style:
-            case "daily": emoji = "🌅"
-            case "daily-love": emoji = "💗"
-        data["signs"][sign][style] = {"emoji": emoji}
+        data["signs"][sign][style] = {"emoji": emojis[style], "name": stylename[style]}
         for day in days:
-            emoji = ""
-            match day:
-                case "today": emoji = "▶️"
-                case "tomorrow": emoji = "⏭️"
-                case "yesterday": emoji = "⏮️"
-            data["signs"][sign][style][day] = {}
-            data["signs"][sign][style][day] = {"emoji": emoji, "date": "", "horoscope": ""}
+            data["signs"][sign][style][day] = {"emoji": emojis[day], "date": "", "horoscope": ""}
 
 def scrapeData(sign: str, day: str, style: str):
     url = ""

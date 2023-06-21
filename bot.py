@@ -15,8 +15,6 @@ if TOKEN == "none":
     logging.critical("Missing token! Set TOKEN in .env, see .env.example")
     sys.exit("Exiting.")
 
-style_string = {"daily": "Daily", "daily-love": "Daily Love"}
-
 # Logging
 logopt = { "debug": logging.DEBUG, "info": logging.INFO, "warning": logging.WARNING , "error": logging.ERROR, "critical": logging.CRITICAL }
 logging.basicConfig(level=logopt.get(LOGLEVEL, logging.INFO))
@@ -71,7 +69,7 @@ bot = Client(token=TOKEN)
         )
 async def horoscope(ctx: SlashContext, sign: str, day: str = "today", style: str = "daily"):
     h = getHoro(sign, FILE)
-    await ctx.send("### " + h[style]["emoji"] + " " + style_string[style] + " Horoscope for __" + h["name"] + "__" + " for " + "*" + h[style][day]["emoji"] + " " + h[style][day]["date"] + "*: " +  "\n" + h[style][day]["horoscope"])
+    await ctx.send("### " + h["symbol"] + " " + h["name"] + " " + h[style]["emoji"] + " " + h[style]["name"] + " Horoscope for " + h[style][day]["emoji"] + " " + h[style][day]["date"] + "\n" + h[style][day]["horoscope"])
 
 @listen()
 async def on_ready(self):
