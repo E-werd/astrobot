@@ -1,84 +1,95 @@
-#!/usr/bin/env python3
-import logging, sys
-from interactions import Client, listen, SlashCommandChoice, OptionType, slash_command, slash_option, SlashContext
-from horoscope import getHoro, preloadData
-from dotenv import load_dotenv
-from os import getenv
+# External
+import logging
+from interactions import (AutoShardedClient, listen, SlashCommandChoice, 
+                          OptionType, slash_command, slash_option, 
+                          SlashContext, Task, IntervalTrigger)
+# Internal
+from datatypes import Day, Source, Style, Horo, Zodiac
+from horo import Horoscope
 
-# Vars
-load_dotenv()
-TOKEN = getenv("TOKEN", default="none")
-FILE = getenv("DATAFILE", default="data.json")
-LOGLEVEL = getenv("LOGLEVEL", default="error")
+class Bot(AutoShardedClient):
+    '''Wrapped class for interactions.py client'''
+    def __init__(self, token: str, horoscope: Horoscope):
+        '''Wrapped class for interactions.py client
+        :token: Token for authentication
+        :horoscope: Horoscope object'''
+        super(Bot, self).__init__(token=token)
+        self.scope: Horoscope = horoscope
 
-if TOKEN == "none":
-    logging.critical("Missing token! Set TOKEN in .env, see .env.example")
-    sys.exit("Exiting.")
+    # Listeners
+    @listen()
+    async def on_startup(self):
+        logging.info("Starting update check task.")
+        self.check_updates.start()
 
-# Logging
-logopt = { "debug": logging.DEBUG, "info": logging.INFO, "warning": logging.WARNING , "error": logging.ERROR, "critical": logging.CRITICAL }
-logging.basicConfig(level=logopt.get(LOGLEVEL, logging.INFO))
+    @listen()
+    async def on_ready(self):
+        logging.info(f"Logged on as: {self.app.name}")
+        
+    # Tasks
+    @Task.create(IntervalTrigger(minutes=30))
+    async def check_updates(self):
+        self.scope.check_updates()
 
-# Bot stuff
-bot = Client(token=TOKEN)
-
-@slash_command(
-        name="horoscope",
-        description="Show horoscope for specified sign"
+    # Commands
+    @slash_command(
+            name="horoscope",
+            description="Show horoscope for specified sign"
         )
-@slash_option(
-        name="sign",
-        description="zodiac sign",
-        opt_type=OptionType.STRING,
-        required=True,
-        choices=[
-            SlashCommandChoice(name="♈ Aries", value="aries"),
-            SlashCommandChoice(name="♉ Taurus", value="taurus"),
-            SlashCommandChoice(name="♊ Gemini", value="gemini"),
-            SlashCommandChoice(name="♋ Cancer", value="cancer"),
-            SlashCommandChoice(name="♌ Leo", value="leo"),
-            SlashCommandChoice(name="♍ Virgo", value="virgo"),
-            SlashCommandChoice(name="♎ Libra", value="libra"),
-            SlashCommandChoice(name="♏ Scorpio", value="scorpio"),
-            SlashCommandChoice(name="♐ Sagittarius", value="sagittarius"),
-            SlashCommandChoice(name="♑ Capricorn", value="capricorn"),
-            SlashCommandChoice(name="♒ Aquarius", value="aquarius"),
-            SlashCommandChoice(name="♓ Pisces", value="pisces"),
-        ]
-        )
-@slash_option(
-        name="day",
-        description="day",
-        opt_type=OptionType.STRING,
-        required=False,
-        choices=[
-            SlashCommandChoice(name="▶️ Today", value="today"),
-            SlashCommandChoice(name="⏭️ Tomorrow", value="tomorrow"),
-            SlashCommandChoice(name="⏮️ Yesterday", value="yesterday"),
-        ]
-        )
-@slash_option(
-        name="style",
-        description="horoscope style",
-        opt_type=OptionType.STRING,
-        required=False,
-        choices=[
-            SlashCommandChoice(name="🌅 Daily", value="daily"),
-            SlashCommandChoice(name="💗 Daily Love", value="daily-love"),
-        ]
-        )
-async def horoscope(ctx: SlashContext, sign: str, day: str = "today", style: str = "daily"):
-    h = getHoro(sign, FILE)
-    await ctx.send("### " + h["symbol"] + " " + h["name"] + " " + h[style]["emoji"] + " " + h[style]["name"] + " Horoscope for " + h[style][day]["emoji"] + " " + h[style][day]["date"] + "\n" + h[style][day]["horoscope"])
+    @slash_option(
+            name="zodiac",
+            description="zodiac sign",
+            opt_type=OptionType.STRING,
+            required=True,
+            choices=[
+                SlashCommandChoice(name="♈ Aries", value="aries"),
+                SlashCommandChoice(name="♉ Taurus", value="taurus"),
+                SlashCommandChoice(name="♊ Gemini", value="gemini"),
+                SlashCommandChoice(name="♋ Cancer", value="cancer"),
+                SlashCommandChoice(name="♌ Leo", value="leo"),
+                SlashCommandChoice(name="♍ Virgo", value="virgo"),
+                SlashCommandChoice(name="♎ Libra", value="libra"),
+                SlashCommandChoice(name="♏ Scorpio", value="scorpio"),
+                SlashCommandChoice(name="♐ Sagittarius", value="sagittarius"),
+                SlashCommandChoice(name="♑ Capricorn", value="capricorn"),
+                SlashCommandChoice(name="♒ Aquarius", value="aquarius"),
+                SlashCommandChoice(name="♓ Pisces", value="pisces"),
+            ]
+            )
+    @slash_option(
+            name="day",
+            description="day",
+            opt_type=OptionType.STRING,
+            required=False,
+            choices=[
+                SlashCommandChoice(name="▶️ Today", value="today"),
+                SlashCommandChoice(name="⏭️ Tomorrow", value="tomorrow"),
+                SlashCommandChoice(name="⏮️ Yesterday", value="yesterday"),
+            ]
+            )
+    @slash_option(
+            name="style",
+            description="horoscope style",
+            opt_type=OptionType.STRING,
+            required=False,
+            choices=[
+                SlashCommandChoice(name="🌅 Daily", value="daily"),
+                SlashCommandChoice(name="💗 Daily Love", value="daily-love"),
+            ]
+            )
+    async def horoscope(self, ctx: SlashContext, zodiac: str, day: str = "today", style: str = "daily", source: str = "astrology_com"):
+        _sign: Zodiac.Type = Zodiac.types[zodiac]
+        _day: Day.Type = Day.types[day]
+        _style: Style.Type = Style.types[style]
+        _source: Source.Type = Source.types[source]
+        logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
-@listen()
-async def on_ready(self):
-    logging.info("Logged on as: " + bot.app.name)
+        hor: Horo = self.scope.get_horoscope(zodiac=_sign, day=_day, source=_source, style=_style)
+        header: list[str] = ["### ", 
+                             hor.zodiac.symbol, hor.zodiac.full, 
+                             hor.style.symbol, hor.style.full, 
+                             "for", hor.day.symbol, hor.day.long]
+        body: str = hor.text
+        msg: str = " ".join(header) + "\n" + body
 
-# Startup
-logging.info("Preloading data...")
-preloadData(FILE)
-logging.info("Done.")
-
-logging.info("Starting bot...")
-bot.start()
+        await ctx.send(msg)

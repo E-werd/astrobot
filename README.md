@@ -15,12 +15,4 @@ Adds the ```/horoscope``` command.  The horoscope data is scraped from astrology
 
 Requires a token in ```.env```, see ```.env.example```.
 
-Data is kept locally in a file to avoid scraping for every request.  This file needs to be updated once per day.  Set a cron job to run ```update.py```:
-
-```
-0 6 * * * cd ~/astrobot && ./update.py
-```
-
-This runs at 6am daily.  I believe 6am ET is long enough to allow the site to update itself, but you might have to play with it.  This time has worked for me so far.
-
-* TODO: Find a way to update without relying on a cron job.  Check the date in the file and choosing when to update the following day.  Something like "if current date if after data date and at least 6am, update".  Once this is done, store data in memory and update it when the file is updated to reduce hits on file system.
+Data is kept locally in a file to avoid scraping for every request.  Data is checked for updates every 30 minutes according to a registered task in ```bot.py```, updated data is written back to the file.
