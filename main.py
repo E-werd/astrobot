@@ -6,7 +6,7 @@ from os import getenv
 # Internal
 from bot import Bot
 from data import Data
-from horo import Horoscope
+from horoscope import Horoscope
 
 class Main:
     '''Main class to run AstroBot'''

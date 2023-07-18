@@ -5,7 +5,7 @@ from interactions import (AutoShardedClient, listen, SlashCommandChoice,
                           SlashContext, Task, IntervalTrigger)
 # Internal
 from datatypes import Day, Source, Style, Horo, Zodiac
-from horo import Horoscope
+from horoscope import Horoscope
 
 class Bot(AutoShardedClient):
     '''Wrapped class for interactions.py client'''
