@@ -20,7 +20,10 @@ class Data:
         self.path: str = file
         self.source: Data.Source.Type = source
         self.data: dict = {}
-        
+        self.__load_data()
+
+    def __load_data(self) -> None:
+        '''Wraps buffering of data from any source into self.data'''
         match self.source:
             case Data.Source.json:
                 self.__load_json()
@@ -47,8 +50,12 @@ class Data:
         except Exception as e:
             logging.error(f"*** File write error: {str(e)}")
 
+    def load_data(self) -> None:
+        '''Load from data source to buffer'''
+        self.__load_data()
+
     def write_data(self) -> None:
-        '''Write buffered data to data source'''
+        '''Write buffer to data source'''
         match self.source:
             case Data.Source.json: self.__write_json()
             case _: return # This should never happen. Update loop with new data sources.

@@ -5,16 +5,17 @@ from interactions import (AutoShardedClient, listen, SlashCommandChoice,
                           SlashContext, Task, IntervalTrigger)
 # Internal
 from datatypes import Day, Source, Style, Horo, Zodiac
+from data import Data
 from horoscope import Horoscope
 
 class Bot(AutoShardedClient):
     '''Wrapped class for interactions.py client'''
-    def __init__(self, token: str, horoscope: Horoscope):
+    def __init__(self, token: str, file: Data):
         '''Wrapped class for interactions.py client
         :token: Token for authentication
         :horoscope: Horoscope object'''
         super(Bot, self).__init__(token=token)
-        self.scope: Horoscope = horoscope
+        self.scope: Horoscope = Horoscope(file=file)
 
     # Listeners
     @listen()

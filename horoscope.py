@@ -13,13 +13,7 @@ class Horoscope:
         '''Class for working with horoscopes, wraps all sources
         :file: Object where file data is held, type: Data'''
         self.file: Data = file
-        if (self.file.data == {}):
-            logging.debug("Data is empty. Getting data...")
-            self.file.data.update(self.__create_structure())
-            self.update_all()
-        else:
-            self.__check_data()
-        logging.debug(f"Data should be ready in file: {self.file.path}")
+        self.__load_data()
 
     def __create_structure(self) -> dict:
         '''Creates empty data structure, returns dict'''
@@ -36,6 +30,15 @@ class Horoscope:
                 case _: continue # This should never happen. Update loop with new source structures.
         
         return h
+    
+    def __load_data(self) -> None:
+        if (self.file.data == {}):
+            logging.debug("Data is empty. Getting data...")
+            self.file.data.update(self.__create_structure())
+            self.update_all()
+        else:
+            self.__check_data()
+        logging.debug(f"Data should be ready in file: {self.file.path}")
         
     def __fetch(self, horo: Horo) -> tuple[str, str]:
         '''Fetch data from source, return date + text
@@ -79,6 +82,7 @@ class Horoscope:
     def __check_data(self) -> None:
         '''Checks data, does what is needed to ensure that data is good and up-to-date'''
         Day.update_days()
+        self.file.load_data()
         d: dict = self.__get_data_by_day(day=Day.tomorrow)
 
         d_date: datetime = datetime.strptime(d["date"], "%B %d, %Y")
@@ -173,6 +177,7 @@ class Horoscope:
         :day: Day for horoscope
         :source: Source for horoscope
         :style: horoscope style'''
+        self.file.load_data()
         logging.info(f"Getting {style.full} for {zodiac.full} for {day.full}")
         text: str = self.file.data["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][zodiac.name]
         return Horo(zodiac=zodiac, day=day, source=source, style=style, text=text)

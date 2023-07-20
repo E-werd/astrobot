@@ -4,9 +4,8 @@ import logging, sys
 from dotenv import load_dotenv
 from os import getenv
 # Internal
-from bot import Bot
 from data import Data
-from horoscope import Horoscope
+from bot import Bot
 
 class Main:
     '''Main class to run AstroBot'''
@@ -26,8 +25,7 @@ class Main:
 
         # Setup data and bot
         self.data: Data = Data(file=self.FILE, source=Data.Source.json)
-        self.horoscope: Horoscope = Horoscope(file=self.data)
-        self.bot: Bot = Bot(token=self.TOKEN, horoscope=self.horoscope)
+        self.bot: Bot = Bot(token=self.TOKEN, file=self.data)
 
     def __load_env(self) -> bool:
         '''Loads from .env using dotenv'''
