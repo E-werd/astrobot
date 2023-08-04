@@ -10,12 +10,21 @@ from horoscope import Horoscope
 
 class Bot(AutoShardedClient):
     '''Wrapped class for interactions.py client'''
-    def __init__(self, token: str, file: Data):
+    def __init__(self, token: str, data: Data):
         '''Wrapped class for interactions.py client
         :token: Token for authentication
         :horoscope: Horoscope object'''
         super(Bot, self).__init__(token=token)
-        self.scope: Horoscope = Horoscope(file=file)
+
+        # Create Data and Horoscope objects, local dict
+        self.file: Data = data
+        self.data: dict = self.file.data # Only do this the first time, otherwise use self.file.load_data()
+        self.scope: Horoscope = Horoscope(data=self.data)
+
+        # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
+        self.data = self.scope.data
+        self.file.data = self.data
+        self.file.write_data()
 
     # Listeners
     @listen()
@@ -30,7 +39,11 @@ class Bot(AutoShardedClient):
     # Tasks
     @Task.create(IntervalTrigger(minutes=30))
     async def check_updates(self):
-        self.scope.check_updates()
+        # Read data from file, check for updates, sync and write back.
+        self.data = self.file.load_data()
+        self.data = self.scope.check_updates(data=self.data)
+        self.file.data = self.data
+        self.file.write_data()
 
     # Commands
     @slash_command(
@@ -85,7 +98,7 @@ class Bot(AutoShardedClient):
         _source: Source.Type = Source.types[source]
         logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
-        hor: Horo = self.scope.get_horoscope(zodiac=_sign, day=_day, source=_source, style=_style)
+        hor: Horo = self.scope.get_horoscope(zodiac=_sign, day=_day, source=_source, style=_style, data=self.data)
         header: list[str] = ["### ", 
                              hor.zodiac.symbol, hor.zodiac.full, 
                              hor.style.symbol, hor.style.full, 

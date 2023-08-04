@@ -20,26 +20,25 @@ class Data:
         self.path: str = file
         self.source: Data.Source.Type = source
         self.data: dict = {}
-        self.__load_data()
+        self.data = self.__load_data()
 
-    def __load_data(self) -> None:
-        '''Wraps buffering of data from any source into self.data'''
+    def __load_data(self) -> dict:
+        '''Wraps buffering of data from any source. Returns dict'''
         match self.source:
             case Data.Source.json:
-                self.__load_json()
-            case _: pass # This should never happen. Update loop with new data sources.
+                return self.__load_json()
+            case _: return {} # This should never happen. Update loop with new data sources.
 
-    def __load_json(self) -> None:
-        '''Buffers json from self.path into self.data'''
+    def __load_json(self) -> dict:
+        '''Buffers json from self.path. Returns dict'''
         try:
             logging.info(f"Loading data from file: {self.path}")
             with open(file=self.path, mode="r", encoding="utf-8") as f:
-                self.data = json.load(f)
-            return
+                return json.load(f)
         except Exception as e:
             logging.error(f"*** File load error: {str(e)}")
             logging.warning(f"Assuming file is empty or missing, returning empty dataset.")
-            return
+            return {}
 
     def __write_json(self) -> None:
         '''Writes json to self.path from self.data'''
@@ -50,9 +49,9 @@ class Data:
         except Exception as e:
             logging.error(f"*** File write error: {str(e)}")
 
-    def load_data(self) -> None:
-        '''Load from data source to buffer'''
-        self.__load_data()
+    def load_data(self) -> dict:
+        '''Load from data source to buffer. Returns dict'''
+        return self.__load_data()
 
     def write_data(self) -> None:
         '''Write buffer to data source'''

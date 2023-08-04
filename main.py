@@ -25,7 +25,7 @@ class Main:
 
         # Setup data and bot
         self.data: Data = Data(file=self.FILE, source=Data.Source.json)
-        self.bot: Bot = Bot(token=self.TOKEN, file=self.data)
+        self.bot: Bot = Bot(token=self.TOKEN, data=self.data)
 
     def __load_env(self) -> bool:
         '''Loads from .env using dotenv'''
