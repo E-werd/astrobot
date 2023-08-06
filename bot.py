@@ -98,6 +98,7 @@ class Bot(AutoShardedClient):
         _source: Source.Type = Source.types[source]
         logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
+        self.data = self.file.load_data()
         hor: Horo = self.scope.get_horoscope(zodiac=_sign, day=_day, source=_source, style=_style, data=self.data)
         header: list[str] = ["### ", 
                              hor.zodiac.symbol, hor.zodiac.full, 

@@ -51,27 +51,13 @@ class Horoscope:
                 logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.day.date.strftime('%Y-%m-%d')}, {horo.style.name} from {horo.source.name}")
                 h = AstrologyCom(zodiac=horo.zodiac, day=horo.day, style=horo.style)
                 return h.date, h.text
-            case _: return "", "Unknown Source" # This should never happen. Update loop with new sources.
-    
-    def __get_data_by_day(self,  
-                 day: Day.Type,
-                 data: dict, 
-                 source: Source.Type = Source.astrology_com, 
-                 style: Style.Type = Style.daily
-                 ) -> dict:
-        '''Get buffered data by day. Returns dict
-        :day: Day object to get
-        :data: Dict to pull from
-        :source: Source for data
-        :style: Style to get'''
-        return data["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]
+            case _: return "", "Unknown Source" # This should never happen. Update loop with new sources.    
     
     def __move_data_day(self, 
                         start: Day.Type, 
                         dest: Day.Type, 
-                        style: Style.Type, 
-                        source: Source.Type,
-                        data: dict) -> dict:
+                        data: dict,
+                        source: Source.Type = Source.astrology_com) -> dict:
         '''Moves data in buffer, used in update operations. Returns dict
         :start: source day
         :dest: destination day
@@ -79,13 +65,18 @@ class Horoscope:
         :source: source to move
         :data: Dict to manipulate'''
         d: dict = data
-        logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{style.full}' from source '{source.full}'...") 
+        for style in Style.types:
+            work: dict = d["horoscopes"]["sources"][source.name]["styles"][style]["days"]
+            
+            logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{Style.types[style].full}' from source '{source.full}'...") 
 
-        start_date: str = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][start.name]["date"]
-        start_signs: dict = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][start.name]["signs"]
+            start_date: str = work[start.name]["date"]
+            start_signs: dict = work[start.name]["signs"]
 
-        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][dest.name].update({"date": start_date})
-        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][dest.name]["signs"].update(start_signs)
+            work[dest.name].update({"date": start_date})
+            work[dest.name]["signs"].update(start_signs)
+
+            d["horoscopes"]["sources"][source.name]["styles"][style]["days"].update(work)
 
         return d
 
@@ -94,7 +85,7 @@ class Horoscope:
         :data: Dict to check and manipulate'''
         data_in: dict = data
         Day.update_days()
-        d: dict = self.__get_data_by_day(day=Day.tomorrow, data=data_in)
+        d: dict = data_in["horoscopes"]["sources"][Source.astrology_com.name]["styles"][Style.daily.name]["days"][Day.tomorrow.name]
 
         d_date: datetime = datetime.strptime(d["date"], "%B %d, %Y")
         d_date_str: str = d_date.strftime('%B %d, %Y')
@@ -126,10 +117,8 @@ class Horoscope:
         if (s_date_str == d_datep1_str):
             # One day behind, move: today->yesterday, tomorrow->today
             logging.info("Data one day behind.") 
-            data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, style=Style.daily, source=Source.astrology_com, data=data_in) # daily, move today to yesterday
-            data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, style=Style.daily_love, source=Source.astrology_com, data=data_in) # daily-love, move today to yesterday
-            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, style=Style.daily, source=Source.astrology_com, data=data_in) # daily, move tomorrow to today
-            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, style=Style.daily_love, source=Source.astrology_com, data=data_in) # daily-love, move tomorrow to today
+            data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, data=data_in) # move today to yesterday
+            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, data=data_in) # move tomorrow to today
             
             # Update: tomorrow
             data_in = self.__update_day(day=Day.tomorrow, source=Source.astrology_com, data=data_in)
@@ -142,8 +131,7 @@ class Horoscope:
         if (s_date_str == d_datep2_str): 
             # Two days behind, move: tomorrow->yesterday
             logging.info("Data two days behind.") 
-            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, style=Style.daily, source=Source.astrology_com, data=data_in) # daily, move tomorrow to yesterday
-            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, style=Style.daily_love, source=Source.astrology_com, data=data_in) # daily-love, move tomorrow to yesterday
+            data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, data=data_in) # move tomorrow to yesterday
             
             # Update: tomorrow + today
             data_in = self.__update_day(day=Day.tomorrow, source=Source.astrology_com, data=data_in)
