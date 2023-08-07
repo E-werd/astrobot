@@ -92,6 +92,8 @@ class Bot(AutoShardedClient):
             ]
             )
     async def horoscope(self, ctx: SlashContext, zodiac: str, day: str = "today", style: str = "daily", source: str = "astrology_com"):
+        Day.update_days() # Update the Day types so that it shows the right date
+
         _sign: Zodiac.Type = Zodiac.types[zodiac]
         _day: Day.Type = Day.types[day]
         _style: Style.Type = Style.types[style]
