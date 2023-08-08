@@ -48,8 +48,12 @@ class Horoscope:
         :horo: Horo object'''
         match horo.source:
             case Source.astrology_com:
-                logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.day.date.strftime('%Y-%m-%d')}, {horo.style.name} from {horo.source.name}")
-                h = AstrologyCom(zodiac=horo.zodiac, day=horo.day, style=horo.style)
+                logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.date}, {horo.style.name} from {horo.source.name}")
+                
+                Day.update_days()
+                day = self.get_day(date=horo.date)
+
+                h = AstrologyCom(zodiac=horo.zodiac, day=day, style=horo.style)
                 return h.date, h.text
             case _: return "", "Unknown Source" # This should never happen. Update loop with new sources.    
     
@@ -157,7 +161,7 @@ class Horoscope:
                     d["horoscopes"]["sources"][source.name]["styles"][style]["days"].update(add)
                     for zodiac in Zodiac.types:
                         h = Horo(zodiac=Zodiac.types[zodiac],
-                                    day=day,
+                                    date=day.ymd,
                                     style=Style.types[style])
                         date, text = self.__fetch(horo=h)
                         add = {zodiac: text}
@@ -166,6 +170,24 @@ class Horoscope:
                         d["horoscopes"]["sources"][source.name]["styles"][style]["days"][day.name].update(add)
             case _: return d # This should never happen. Update loop with new source structures.
         return d
+
+    def get_day(self, date: str) -> Day.Type:
+        datestr: str = datetime.strptime(date, "%B %d, %Y").strftime('%B %d, %Y')
+
+        class Date:
+            tomorrow: str = Day.tomorrow.date.strftime('%B %d, %Y')
+            today: str = Day.today.date.strftime('%B %d, %Y')
+            yesterday: str = Day.yesterday.date.strftime('%B %d, %Y')
+
+        match datestr:
+            case Date.today:
+                return Day.today
+            case Date.tomorrow:
+                return Day.tomorrow
+            case Date.yesterday:
+                return Day.yesterday
+            case _:
+                return Day.today
 
     def get_horoscope(self,
                       data: dict, 
@@ -183,7 +205,8 @@ class Horoscope:
         d: dict = data
         logging.info(f"Getting {style.full} for {zodiac.full} for {day.full}")
         text: str = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][zodiac.name]
-        return Horo(zodiac=zodiac, day=day, source=source, style=style, text=text)
+        date: str = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["date"]
+        return Horo(zodiac=zodiac, date=date, source=source, style=style, text=text)
 
     def update_all(self, data: dict) -> dict:
         '''Updates all data. Returns dict

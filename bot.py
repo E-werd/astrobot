@@ -102,10 +102,11 @@ class Bot(AutoShardedClient):
 
         self.data = self.file.load_data()
         hor: Horo = self.scope.get_horoscope(zodiac=_sign, day=_day, source=_source, style=_style, data=self.data)
+        horday: Day.Type = self.scope.get_day(hor.date)
         header: list[str] = ["### ", 
                              hor.zodiac.symbol, hor.zodiac.full, 
                              hor.style.symbol, hor.style.full, 
-                             "for", hor.day.symbol, hor.day.long]
+                             "for", horday.symbol, hor.date]
         body: str = hor.text
         msg: str = " ".join(header) + "\n" + body
 

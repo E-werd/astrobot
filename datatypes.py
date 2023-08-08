@@ -31,6 +31,7 @@ class Day:
             self.date: datetime = self.__get_date(day=name)
             self.formatted: str = self.date.strftime("%Y-%m-%d")
             self.long: str = self.name.capitalize() + ", " + self.date.strftime("%B %d, %Y")
+            self.ymd: str = self.date.strftime("%B %d, %Y")
 
         def __get_date(self, day: str) -> datetime:
             '''Get date from relative day str, returns datetime
@@ -134,7 +135,7 @@ class Horo:
     '''Container class for individual horoscopes.'''
     def __init__(self, 
                  zodiac: Zodiac.Type, 
-                 day: Day.Type, 
+                 date: str, 
                  text: str = "",
                  source: Source.Type = Source.astrology_com, 
                  style: Style.Type = Style.daily
@@ -146,7 +147,7 @@ class Horo:
         :source: Source of horoscope. Default: Source.astrology_com
         :style: Style of horoscope, specific to Source.astrology_com. Unused if the source doesn't match. Default: AstrologyCom.Style.daily'''
         self.zodiac: Zodiac.Type = zodiac
-        self.day: Day.Type = day
+        self.date: str = date
         self.text: str = text
         self.source: Source.Type = source
         self.style: Style.Type = style
