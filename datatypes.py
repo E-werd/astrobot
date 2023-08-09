@@ -2,21 +2,6 @@
 import logging
 from datetime import datetime, timedelta
 
-class Source:
-    '''Class to hold possible sources: astrology_com. Use 'types' for iteration.'''
-    # TODO: Possible other sources huffpost.com, astrostyle.com, horoscope.com
-    class Type:
-        def __init__(self, name: str, full: str) -> None:
-            '''
-            Container class for individual sources
-            :name: name
-            :full: pretty name
-            '''
-            self.name: str = name
-            self.full: str = full
-    astrology_com: Type = Type(name="astrology_com", full="Astrology.com")
-    types: dict[str, Type] = {"astrology_com": astrology_com}
-
 class Day:
     '''Class to hold possible relative days: yesterday, today, tomorrow. Use 'types' for iteration.'''
     class Type:
@@ -32,6 +17,7 @@ class Day:
             self.formatted: str = self.date.strftime("%Y-%m-%d")
             self.long: str = self.name.capitalize() + ", " + self.date.strftime("%B %d, %Y")
             self.ymd: str = self.date.strftime("%B %d, %Y")
+            self.day_of_week: str = self.date.strftime("%A").lower()
 
         def __get_date(self, day: str) -> datetime:
             '''Get date from relative day str, returns datetime
@@ -75,19 +61,35 @@ class Day:
 class Style:
     '''Class to hold possible styles: daily, daily_love. Use 'types' for iteration.'''
     class Type:
-        def __init__(self, name: str, full: str, symbol: str, source: Source.Type) -> None:
+        def __init__(self, name: str, full: str, symbol: str) -> None:
             '''Container class for individual styles
             :name: name
             :full: pretty name
-            :symbol: symbol or emoji
-            :source: Source where style is found'''
+            :symbol: symbol or emoji'''
             self.name: str = name
             self.full: str = full
             self.symbol: str = symbol
-            self.source: Source.Type = source
-    daily: Type = Type(name="daily", full="Daily Horoscope", symbol="🌅", source=Source.astrology_com)
-    daily_love: Type = Type(name="daily-love", full="Daily Love Horoscope", symbol="💗", source=Source.astrology_com)
+
+    daily: Type = Type(name="daily", full="Daily Horoscope", symbol="🌅")
+    daily_love: Type = Type(name="daily-love", full="Daily Love Horoscope", symbol="💗")
     types: dict[str, Type] = {"daily": daily, "daily-love": daily_love}
+
+class Source:
+    '''Class to hold possible sources: astrology_com. Use 'types' for iteration.'''
+    # TODO: Possible other sources huffpost.com, astrostyle.com, horoscope.com
+    class Type:
+        def __init__(self, name: str, full: str, styles: list) -> None:
+            '''
+            Container class for individual sources
+            :name: name
+            :full: pretty name
+            '''
+            self.name: str = name
+            self.full: str = full
+            self.styles: list[Style.Type] = styles
+    astrology_com: Type = Type(name="astrology_com", full="Astrology.com", styles=[Style.daily, Style.daily_love])
+    astrostyle: Type = Type(name="astrostyle", full="AstroStyle.com", styles=[Style.daily])
+    types: dict[str, Type] = {"astrology_com": astrology_com, "astrostyle": astrostyle}
 
 class Zodiac:
     '''Static class for describing the Zodiac: aries, ..., pisces. Use 'types' for iteration.'''
@@ -150,4 +152,8 @@ class Horo:
         self.date: str = date
         self.text: str = text
         self.source: Source.Type = source
-        self.style: Style.Type = style
+        
+        if style not in source.styles:
+            self.style = Style.daily
+        else:
+            self.style = style

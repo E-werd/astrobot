@@ -2,7 +2,8 @@
 import logging
 from interactions import (AutoShardedClient, listen, SlashCommandChoice, 
                           OptionType, slash_command, slash_option, 
-                          SlashContext, Task, IntervalTrigger)
+                          SlashContext, AutocompleteContext, Task, 
+                          IntervalTrigger)
 # Internal
 from datatypes import Day, Source, Style, Horo, Zodiac
 from data import Data
@@ -91,6 +92,16 @@ class Bot(AutoShardedClient):
                 SlashCommandChoice(name="💗 Daily Love", value="daily-love"),
             ]
             )
+    @slash_option(
+            name="source",
+            description="horoscope source",
+            opt_type=OptionType.STRING,
+            required=False,
+            choices=[
+                SlashCommandChoice(name="Astrology.com", value="astrology_com"),
+                SlashCommandChoice(name="AstroStyle.com", value="astrostyle"),
+            ]
+            )
     async def horoscope(self, ctx: SlashContext, zodiac: str, day: str = "today", style: str = "daily", source: str = "astrology_com"):
         _sign: Zodiac.Type = Zodiac.types[zodiac]
         _day: Day.Type = Day.types[day]
@@ -104,7 +115,8 @@ class Bot(AutoShardedClient):
         header: list[str] = ["### ", 
                              hor.zodiac.symbol, hor.zodiac.full, 
                              hor.style.symbol, hor.style.full, 
-                             "for", horday.symbol, hor.date]
+                             "for", horday.symbol, hor.date,
+                             "from", _source.full]
         body: str = hor.text
         msg: str = " ".join(header) + "\n" + body
 

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from datatypes import Day, Source, Style, Horo, Zodiac
 # Sources
 from astrologycom import AstrologyCom
+from astrostyle import Astrostyle
 
 class Horoscope:
     '''Class for working with horoscopes, wraps all sources'''
@@ -21,11 +22,13 @@ class Horoscope:
 
         logging.debug("Creating data structure...")
         for source in Source.types:
-            add = {source: {}}
+            add = {Source.types[source].name: {}}
             h["horoscopes"]["sources"].update(add)
             match source:
-                case Source.astrology_com.name: #specific to Astrology.com
+                case Source.astrology_com.name: # specific to Astrology.com
                     h["horoscopes"]["sources"][source].update(AstrologyCom.create_source_structure())
+                case Source.astrostyle.name: # specific to AstroStyle
+                    h["horoscopes"]["sources"][source].update(Astrostyle.create_source_structure())
                 case _: continue # This should never happen. Update loop with new source structures.
         
         return h
@@ -46,41 +49,44 @@ class Horoscope:
     def __fetch(self, horo: Horo) -> tuple[str, str]:
         '''Fetch data from source, return date + text
         :horo: Horo object'''
-        match horo.source:
-            case Source.astrology_com:
-                logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.date}, {horo.style.name} from {horo.source.name}")
-                
-                Day.update_days()
-                day = self.get_day(date=horo.date)
+        logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.date}, {horo.style.name} from {horo.source.name}")
+        
+        Day.update_days()
+        day = self.get_day(date=horo.date)
 
+        match horo.source:
+            case Source.astrology_com:             
                 h = AstrologyCom(zodiac=horo.zodiac, day=day, style=horo.style)
+                return h.date, h.text
+            case Source.astrostyle:
+                h = Astrostyle(zodiac=horo.zodiac, day=day, style=horo.style)
                 return h.date, h.text
             case _: return "", "Unknown Source" # This should never happen. Update loop with new sources.    
     
     def __move_data_day(self, 
                         start: Day.Type, 
                         dest: Day.Type, 
-                        data: dict,
-                        source: Source.Type = Source.astrology_com) -> dict:
+                        data: dict) -> dict:
         '''Moves data in buffer, used in update operations. Returns dict
         :start: source day
         :dest: destination day
-        :style: style to move
         :source: source to move
         :data: Dict to manipulate'''
         d: dict = data
-        for style in Style.types:
-            work: dict = d["horoscopes"]["sources"][source.name]["styles"][style]["days"]
-            
-            logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{Style.types[style].full}' from source '{source.full}'...") 
 
-            start_date: str = work[start.name]["date"]
-            start_signs: dict = work[start.name]["signs"]
+        for source in Source.types:
+            for style in Source.types[source].styles:
+                work: dict = d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"]
+                
+                logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{style.full}' from source '{Source.types[source].full}'...") 
 
-            work[dest.name].update({"date": start_date})
-            work[dest.name]["signs"].update(start_signs)
+                start_date: str = work[start.name]["date"]
+                start_signs: dict = work[start.name]["signs"]
 
-            d["horoscopes"]["sources"][source.name]["styles"][style]["days"].update(work)
+                work[dest.name].update({"date": start_date})
+                work[dest.name]["signs"].update(start_signs)
+
+                d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"].update(work)
 
         return d
 
@@ -125,7 +131,7 @@ class Horoscope:
             data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, data=data_in) # move tomorrow to today
             
             # Update: tomorrow
-            data_in = self.__update_day(day=Day.tomorrow, source=Source.astrology_com, data=data_in)
+            data_in = self.__update_day(day=Day.tomorrow, data=data_in)
             return data_in
         
         d_datep2: datetime = d_date + timedelta(days=2)
@@ -138,8 +144,8 @@ class Horoscope:
             data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, data=data_in) # move tomorrow to yesterday
             
             # Update: tomorrow + today
-            data_in = self.__update_day(day=Day.tomorrow, source=Source.astrology_com, data=data_in)
-            data_in = self.__update_day(day=Day.today, source=Source.astrology_com, data=data_in)
+            data_in = self.__update_day(day=Day.tomorrow, data=data_in)
+            data_in = self.__update_day(day=Day.today, data=data_in)
             return data_in
         
         # All out of date, update all
@@ -147,28 +153,29 @@ class Horoscope:
         data_in = self.update_all(data=data_in)
         return data_in
 
-    def __update_day(self, day: Day.Type, source: Source.Type, data: dict) -> dict:
+    def __update_day(self, day: Day.Type, data: dict) -> dict:
         '''Updates data for a specific day for all styles. Returns dict
         :day: day to update
         :source: source to update from
         :data: Dict to check and manipulate'''
         d: dict = data
-        logging.info(f"Updating all data for {day.full} from {source.full}...")
-        match source:
-            case Source.astrology_com: #specific to Astrology.com
-                for style in Style.types:
-                    add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
-                    d["horoscopes"]["sources"][source.name]["styles"][style]["days"].update(add)
-                    for zodiac in Zodiac.types:
-                        h = Horo(zodiac=Zodiac.types[zodiac],
-                                    date=day.ymd,
-                                    style=Style.types[style])
-                        date, text = self.__fetch(horo=h)
-                        add = {zodiac: text}
-                        d["horoscopes"]["sources"][source.name]["styles"][style]["days"][day.name]["signs"].update(add)
-                        add = {"date": date}
-                        d["horoscopes"]["sources"][source.name]["styles"][style]["days"][day.name].update(add)
-            case _: return d # This should never happen. Update loop with new source structures.
+        logging.info(f"Updating all data for {day.full}...")
+
+        for source in Source.types:
+            for style in Source.types[source].styles:
+                add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
+                d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"].update(add)
+                for zodiac in Zodiac.types:
+                    h = Horo(zodiac=Zodiac.types[zodiac],
+                                date=day.ymd,
+                                style=style,
+                                source=Source.types[source])
+                    date, text = self.__fetch(horo=h)
+                    add = {zodiac: text}
+                    d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"][day.name]["signs"].update(add)
+                    add = {"date": date}
+                    d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"][day.name].update(add)
+
         return d
 
     def get_day(self, date: str) -> Day.Type:
@@ -202,6 +209,9 @@ class Horoscope:
         :day: Day for horoscope
         :source: Source for horoscope
         :style: horoscope style'''
+        if style not in source.styles:
+            style = Style.daily
+        
         d: dict = data
         logging.info(f"Getting {style.full} for {zodiac.full} for {day.full}")
         text: str = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][zodiac.name]
@@ -213,12 +223,10 @@ class Horoscope:
         :data: Dict to check and manipulate'''
         d: dict = data
         logging.debug("Updating all data from sources...")
-        for source in Source.types:
-            match source:
-                case Source.astrology_com.name: #specific to Astrology.com
-                    for day in Day.types:
-                        d = self.__update_day(day=Day.types[day], source=Source.types[source], data=d)
-                case _: continue # This should never happen. Update loop with new source structures.
+        
+        for day in Day.types:
+            d = self.__update_day(day=Day.types[day], data=d)
+
         return d
 
     def check_updates(self, data: dict) -> dict:
