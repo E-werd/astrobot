@@ -8,6 +8,7 @@ from interactions import (AutoShardedClient, listen, SlashCommandChoice,
 from datatypes import Day, Source, Style, Horo, Zodiac
 from data import Data
 from horoscope import Horoscope
+from options import Options
 
 class Bot(AutoShardedClient):
     '''Wrapped class for interactions.py client'''
@@ -56,51 +57,28 @@ class Bot(AutoShardedClient):
             description="zodiac sign",
             opt_type=OptionType.STRING,
             required=True,
-            choices=[
-                SlashCommandChoice(name="♈ Aries", value="aries"),
-                SlashCommandChoice(name="♉ Taurus", value="taurus"),
-                SlashCommandChoice(name="♊ Gemini", value="gemini"),
-                SlashCommandChoice(name="♋ Cancer", value="cancer"),
-                SlashCommandChoice(name="♌ Leo", value="leo"),
-                SlashCommandChoice(name="♍ Virgo", value="virgo"),
-                SlashCommandChoice(name="♎ Libra", value="libra"),
-                SlashCommandChoice(name="♏ Scorpio", value="scorpio"),
-                SlashCommandChoice(name="♐ Sagittarius", value="sagittarius"),
-                SlashCommandChoice(name="♑ Capricorn", value="capricorn"),
-                SlashCommandChoice(name="♒ Aquarius", value="aquarius"),
-                SlashCommandChoice(name="♓ Pisces", value="pisces"),
-            ]
+            choices=Options.choice_zodiac()
             )
     @slash_option(
             name="day",
             description="day",
             opt_type=OptionType.STRING,
             required=False,
-            choices=[
-                SlashCommandChoice(name="▶️ Today", value="today"),
-                SlashCommandChoice(name="⏭️ Tomorrow", value="tomorrow"),
-                SlashCommandChoice(name="⏮️ Yesterday", value="yesterday"),
-            ]
+            choices=Options.choice_day()
             )
     @slash_option(
             name="style",
             description="horoscope style",
             opt_type=OptionType.STRING,
             required=False,
-            choices=[
-                SlashCommandChoice(name="🌅 Daily", value="daily"),
-                SlashCommandChoice(name="💗 Daily Love", value="daily-love"),
-            ]
+            choices=Options.choice_style()
             )
     @slash_option(
             name="source",
             description="horoscope source",
             opt_type=OptionType.STRING,
             required=False,
-            choices=[
-                SlashCommandChoice(name="Astrology.com", value="astrology_com"),
-                SlashCommandChoice(name="AstroStyle.com", value="astrostyle"),
-            ]
+            choices=Options.choice_source()
             )
     async def horoscope(self, ctx: SlashContext, zodiac: str, day: str = "today", style: str = "daily", source: str = "astrology_com"):
         _sign: Zodiac.Type = Zodiac.types[zodiac]
@@ -116,8 +94,8 @@ class Bot(AutoShardedClient):
                              hor.zodiac.symbol, hor.zodiac.full, 
                              hor.style.symbol, hor.style.full, 
                              "for", horday.symbol, hor.date,
-                             "from", _source.full]
+                             "from", hor.source.full]
         body: str = hor.text
         msg: str = " ".join(header) + "\n" + body
-
+        
         await ctx.send(msg)
