@@ -7,6 +7,7 @@ from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
 
+
 class Horoscope:
     '''Class for working with horoscopes, wraps all sources'''
     def __init__(self, data: dict) -> None:

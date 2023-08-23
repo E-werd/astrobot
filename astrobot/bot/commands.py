@@ -8,7 +8,7 @@ from astrobot.bot.options import Options
 from astrobot.modules.horoscope import Horoscope
 
 
-class BotCommands:
+class Commands:
     def __init__(self, data: Data) -> None:
         # Create Data and Horoscope objects, local dict
         self.file: Data = data

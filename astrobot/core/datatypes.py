@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime, timedelta
 
+
 class Day:
     '''Class to hold possible relative days: yesterday, today, tomorrow. Use 'types' for iteration.'''
     class Type:

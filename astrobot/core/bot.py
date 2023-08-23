@@ -1,17 +1,13 @@
 # External
 import logging
-from interactions import (AutoShardedClient, listen, SlashCommandChoice, 
-                          OptionType, slash_command, slash_option, 
-                          SlashContext, AutocompleteContext, Task, 
-                          IntervalTrigger)
+from interactions import (AutoShardedClient, listen, Task, IntervalTrigger)
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 from astrobot.core.data import Data
-from astrobot.bot.options import Options
 from astrobot.modules.horoscope import Horoscope
-from astrobot.bot.commands import BotCommands
+from astrobot.bot.commands import Commands
 
-class Bot(AutoShardedClient, BotCommands):
+
+class Bot(AutoShardedClient, Commands):
     '''Wrapped class for interactions.py client'''
     def __init__(self, token: str, data: Data):
         '''Wrapped class for interactions.py client

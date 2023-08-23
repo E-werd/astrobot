@@ -1,8 +1,8 @@
 # External
-import asyncio
 from interactions import SlashCommandChoice
 # Internal
 from astrobot.core.datatypes import Day, Source, Style, Zodiac
+
 
 class Options:
     @staticmethod

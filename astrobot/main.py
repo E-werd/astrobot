@@ -6,6 +6,7 @@ from os import getenv
 from astrobot.core.data import Data
 from astrobot.core.bot import Bot
 
+
 class Main:
     '''Main class to run AstroBot'''
     def __init__(self) -> None:

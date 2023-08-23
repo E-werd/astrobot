@@ -1,6 +1,7 @@
 # External
 import json, logging
 
+
 class Data:
     '''Class for accessing and manipulating data'''
     class Source:

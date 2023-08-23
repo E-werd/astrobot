@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 # Internal
 from astrobot.core.datatypes import Day, Source, Style, Zodiac
 
+
 class AstrologyCom:
     '''Class for working with individual horoscopes from Astrology.com'''
     def __init__(self, zodiac: Zodiac.Type, day: Day.Type, style: Style.Type) -> None:
