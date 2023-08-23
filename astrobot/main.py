@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # External
 import logging, sys
 from dotenv import load_dotenv
