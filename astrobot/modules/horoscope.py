@@ -2,10 +2,10 @@
 import logging
 from datetime import datetime, timedelta
 # Internal
-from datatypes import Day, Source, Style, Horo, Zodiac
+from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 # Sources
-from astrologycom import AstrologyCom
-from astrostyle import Astrostyle
+from astrobot.modules.sources.astrologycom import AstrologyCom
+from astrobot.modules.sources.astrostyle import Astrostyle
 
 class Horoscope:
     '''Class for working with horoscopes, wraps all sources'''
@@ -161,20 +161,20 @@ class Horoscope:
         d: dict = data
         logging.info(f"Updating all data for {day.full}...")
 
-        for source in Source.types:
-            for style in Source.types[source].styles:
+        for _, source in Source.types.items():
+            for style in source.styles:
                 add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
-                d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"].update(add)
-                for zodiac in Zodiac.types:
-                    h = Horo(zodiac=Zodiac.types[zodiac],
+                d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
+                for _, zodiac in Zodiac.types.items():
+                    h = Horo(zodiac=zodiac,
                                 date=day.ymd,
                                 style=style,
-                                source=Source.types[source])
+                                source=source)
                     date, text = self.__fetch(horo=h)
-                    add = {zodiac: text}
-                    d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"][day.name]["signs"].update(add)
+                    add = {zodiac.name: text}
+                    d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
                     add = {"date": date}
-                    d["horoscopes"]["sources"][Source.types[source].name]["styles"][style.name]["days"][day.name].update(add)
+                    d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
 
         return d
 

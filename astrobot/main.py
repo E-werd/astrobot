@@ -4,8 +4,8 @@ import logging, sys
 from dotenv import load_dotenv
 from os import getenv
 # Internal
-from data import Data
-from bot import Bot
+from astrobot.core.data import Data
+from astrobot.core.bot import Bot
 
 class Main:
     '''Main class to run AstroBot'''
@@ -48,8 +48,3 @@ class Main:
     def start(self) -> None:
         '''Starts bot'''
         self.bot.start()
-
-# Starting point
-if __name__ == "__main__":
-    main: Main = Main()
-    main.start()

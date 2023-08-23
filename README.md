@@ -16,3 +16,5 @@ Adds the ```/horoscope``` command.  The horoscope data is scraped from astrology
 Requires a token in ```.env```, see ```.env.example```.
 
 Data is kept locally in a file to avoid scraping for every request.  Data is checked for updates every 30 minutes according to a registered task in ```bot.py```, updated data is written back to the file.
+
+Run with ```python3 -m astrobot```

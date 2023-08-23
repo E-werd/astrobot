@@ -2,7 +2,7 @@
 import requests, logging
 from bs4 import BeautifulSoup
 # Internal
-from datatypes import Day, Source, Style, Zodiac
+from astrobot.core.datatypes import Day, Source, Style, Zodiac
 
 class AstrologyCom:
     '''Class for working with individual horoscopes from Astrology.com'''

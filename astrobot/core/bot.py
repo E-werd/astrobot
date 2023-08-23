@@ -5,10 +5,10 @@ from interactions import (AutoShardedClient, listen, SlashCommandChoice,
                           SlashContext, AutocompleteContext, Task, 
                           IntervalTrigger)
 # Internal
-from datatypes import Day, Source, Style, Horo, Zodiac
-from data import Data
-from horoscope import Horoscope
-from options import Options
+from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
+from astrobot.core.data import Data
+from astrobot.core.options import Options
+from astrobot.modules.horoscope import Horoscope
 
 class Bot(AutoShardedClient):
     '''Wrapped class for interactions.py client'''
