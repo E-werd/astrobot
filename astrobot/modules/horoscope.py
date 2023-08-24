@@ -39,10 +39,12 @@ class Horoscope:
         :data: Dict to check and manipulate'''
         d: dict = data
         if (d == {}):
-            logging.debug("Data is empty. Creating structure...")
+            logging.debug("Data is empty. Creating structure and fetching...")
             d.update(self.__create_structure())
-        
-        d = self.__check_data(data=d)
+            d = self.update_all(data=d)
+        else:
+            d = self.__check_data(data=d)
+            
         logging.debug(f"Data should be ready.")
         return d
         
@@ -144,9 +146,7 @@ class Horoscope:
                 
                 # It must all be out of date, update all
                 logging.info("-All data out of date.")
-                data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
-                data_in = self.__update_day(day=Day.today, source=source, style=style, data=data_in)
-                data_in = self.__update_day(day=Day.yesterday, source=source, style=style, data=data_in)
+                data_in = self.update_all(data=data_in)
             
         return data_in
 
@@ -223,4 +223,16 @@ class Horoscope:
         logging.info("Checking for updates...")
         d = self.__check_data(data=d)
         logging.info("Done.")
+        return d
+    
+    def update_all(self, data: dict) -> dict:
+        '''Update all data in all styles from all sources for all days. Returns dict
+        :data: Dict holding data'''
+        d: dict = data
+
+        for _, source in Source.types.items():
+            for style in source.styles:
+                for _, day in Day.types.items():
+                    d = self.__update_day(day=day, source=source, style=style, data=d)
+        
         return d
