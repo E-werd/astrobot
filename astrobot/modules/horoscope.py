@@ -98,14 +98,14 @@ class Horoscope:
 
         for _, source in Source.types.items():
             for style in source.styles:
-                logging.debug(f"Checking local data from {source.full} for {style.full}...")
+                logging.info(f"Checking local data from {source.full} for {style.full}...")
                 # Check what data thinks is tomorrow against reality
                 d = data_in["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][Day.tomorrow.name]["date"]
                 d_date: datetime = datetime.strptime(str(d), "%B %d, %Y")           # Data date
                 t_date: datetime = datetime.strptime(Day.tomorrow.ymd, "%B %d, %Y") # Tomorrow date
-                logging.debug(f"Comparing local data's tomorrow date ({d_date}) to tomorrow's real date ({t_date})...")
+                logging.debug(f"-Comparing local data's tomorrow date ({d_date}) to tomorrow's real date ({t_date})...")
                 if (d_date == t_date):
-                    logging.info("Data is current.")
+                    logging.info("--Data is current.")
                     continue
                 
                 # Check what data thinks is tomorrow against what the source thinks is tomorrow
@@ -113,17 +113,17 @@ class Horoscope:
                 h = Horo(zodiac=Zodiac.aries, date=Day.tomorrow.ymd, style=style, source=source)
                 date, _ = self.__fetch(horo=h)
                 s_date = datetime.strptime(date, "%B %d, %Y") # Source date
-                logging.debug(f"Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
+                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
                 if (s_date == d_date):
-                    logging.info("Data is current.") 
+                    logging.info("--Data is current.") 
                     continue
 
                 # Check if we're out by 1 day
                 d_datep1: datetime = d_date + timedelta(days=1) # Data date, plus 1 day
-                logging.debug(f"Comparing source data's tomorrow date ({s_date}) to the day after local data's tomorrow date ({d_datep1})...")
+                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to the day after local data's tomorrow date ({d_datep1})...")
                 if (s_date == d_datep1):
                     # One day behind, move: today->yesterday, tomorrow->today
-                    logging.info("Data one day behind.") 
+                    logging.info("--Data one day behind.") 
                     data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, source=source, style=style, data=data_in) # move today to yesterday
                     data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, source=source, style=style, data=data_in) # move tomorrow to today
                     
@@ -132,10 +132,10 @@ class Horoscope:
                 
                 # Check if we're out by 2 days
                 d_datep2: datetime = d_date + timedelta(days=2) # Data date, plus 2 days
-                logging.debug(f"Comparing source data's tomorrow date ({s_date}) to two days after local data's tomorrow date ({d_datep2})...")
+                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to two days after local data's tomorrow date ({d_datep2})...")
                 if (s_date == d_datep2): 
                     # Two days behind, move: tomorrow->yesterday
-                    logging.info("Data two days behind.") 
+                    logging.info("--Data two days behind.") 
                     data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, source=source, style=style, data=data_in) # move tomorrow to yesterday
                     
                     # Update: tomorrow + today
@@ -143,7 +143,7 @@ class Horoscope:
                     data_in = self.__update_day(day=Day.today, source=source, style=style, data=data_in)
                 
                 # It must all be out of date, update all
-                logging.info("All data out of date.")
+                logging.info("-All data out of date.")
                 data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
                 data_in = self.__update_day(day=Day.today, source=source, style=style, data=data_in)
                 data_in = self.__update_day(day=Day.yesterday, source=source, style=style, data=data_in)
