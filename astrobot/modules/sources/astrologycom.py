@@ -88,7 +88,10 @@ class AstrologyCom:
             logging.error(f"*** Fetch error: {str(e)}")
             return "", ""
 
-        soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
-        content = soup.find(id="content").find_all("span") # type: ignore
-        date: str = soup.find(id="content-date").text # type: ignore
-        return date, "".join(s.text for s in content)
+        if (req.status_code == 200):
+            soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
+            content = soup.find(id="content").find_all("span") # type: ignore
+            date: str = soup.find(id="content-date").text # type: ignore
+            return date, "".join(s.text for s in content)
+        else:
+            return "", ""

@@ -6,6 +6,7 @@ from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
+from astrobot.modules.sources.horoscopecom import HoroscopeCom
 
 
 class Horoscope:
@@ -30,6 +31,8 @@ class Horoscope:
                     h["horoscopes"]["sources"][source].update(AstrologyCom.create_source_structure())
                 case Source.astrostyle.name: # specific to AstroStyle
                     h["horoscopes"]["sources"][source].update(Astrostyle.create_source_structure())
+                case Source.horoscope_com.name: # specific to Horoscope.com
+                    h["horoscopes"]["sources"][source].update(HoroscopeCom.create_source_structure())
                 case _: continue # This should never happen. Update loop with new source structures.
         
         return h
@@ -44,7 +47,7 @@ class Horoscope:
             d = self.update_all(data=d)
         else:
             d = self.__check_data(data=d)
-            
+
         logging.debug(f"Data should be ready.")
         return d
         
@@ -61,6 +64,9 @@ class Horoscope:
                 return h.date, h.text
             case Source.astrostyle:
                 h = Astrostyle(zodiac=horo.zodiac, day=day, style=horo.style)
+                return h.date, h.text
+            case Source.horoscope_com:
+                h = HoroscopeCom(zodiac=horo.zodiac, day=day, style=horo.style)
                 return h.date, h.text
             case _: return "", "Unknown Source" # This should never happen. Update loop with new sources.    
     

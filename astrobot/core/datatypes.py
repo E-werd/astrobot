@@ -79,7 +79,7 @@ class Source:
     '''Class to hold possible sources: astrology_com. Use 'types' for iteration.'''
     # TODO: Possible other sources huffpost.com, astrostyle.com, horoscope.com
     class Type:
-        def __init__(self, name: str, full: str, styles: list) -> None:
+        def __init__(self, name: str, full: str, styles: list, default_style: Style.Type = Style.daily) -> None:
             '''
             Container class for individual sources
             :name: name
@@ -88,9 +88,11 @@ class Source:
             self.name: str = name
             self.full: str = full
             self.styles: list[Style.Type] = styles
+            self.default_style: Style.Type = default_style
+    horoscope_com: Type = Type(name="horoscope_com", full="Horoscope.com", styles=[Style.daily, Style.daily_love])
     astrology_com: Type = Type(name="astrology_com", full="Astrology.com", styles=[Style.daily, Style.daily_love])
     astrostyle: Type = Type(name="astrostyle", full="AstroStyle.com", styles=[Style.daily])
-    types: dict[str, Type] = {"astrology_com": astrology_com, "astrostyle": astrostyle}
+    types: dict[str, Type] = {"astrology_com": astrology_com, "astrostyle": astrostyle, "horoscope_com": horoscope_com}
 
 class Zodiac:
     '''Static class for describing the Zodiac: aries, ..., pisces. Use 'types' for iteration.'''

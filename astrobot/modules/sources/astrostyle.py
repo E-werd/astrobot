@@ -6,9 +6,9 @@ from astrobot.core.datatypes import Day, Source, Style, Zodiac
 
 
 class Astrostyle:
-    '''Class for working with individual horoscopes from Astrology.com'''
+    '''Class for working with individual horoscopes from Astrostyle.com'''
     def __init__(self, zodiac: Zodiac.Type, day: Day.Type, style: Style.Type) -> None:
-        '''Class for working with individual horoscopes from Astrology.com
+        '''Class for working with individual horoscopes from Astrostyle.com
         :zodiac: Zodiac sign
         :day: Day for horoscope. Day.Type object, enumerated in Day.types
         :style: Horoscope style. Style.Type object, enumerated in Style.types'''
@@ -77,7 +77,10 @@ class Astrostyle:
             logging.error(f"*** Fetch error: {str(e)}")
             return "", ""
 
-        soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
-        content = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
-        date: str = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
-        return date, content
+        if (req.status_code == 200):
+            soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
+            content = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
+            date: str = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+            return date, content
+        else:
+            return "", ""
