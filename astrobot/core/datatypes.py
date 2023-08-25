@@ -77,7 +77,6 @@ class Style:
 
 class Source:
     '''Class to hold possible sources: astrology_com. Use 'types' for iteration.'''
-    # TODO: Possible other sources huffpost.com, astrostyle.com, horoscope.com
     class Type:
         def __init__(self, name: str, full: str, styles: list, default_style: Style.Type = Style.daily) -> None:
             '''
@@ -157,6 +156,6 @@ class Horo:
         self.source: Source.Type = source
         
         if style not in source.styles:
-            self.style = Style.daily
+            self.style = source.default_style
         else:
             self.style = style
