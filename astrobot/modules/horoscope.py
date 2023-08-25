@@ -214,7 +214,7 @@ class Horoscope:
         :source: Source for horoscope
         :style: horoscope style'''
         if style not in source.styles:
-            style = Style.daily
+            style = source.default_style
         
         d: dict = data
         logging.info(f"Getting {style.full} for {zodiac.full} for {day.full}")
