@@ -109,7 +109,7 @@ class Horoscope:
                 logging.info(f"Checking local data from {source.full} for {style.full}...")
                 # Check what data thinks is tomorrow against reality
                 d = data_in["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][Day.tomorrow.name]["date"]
-                d_date: datetime = datetime.strptime(str(d), "%B %d, %Y")           # Data date
+                d_date: datetime = datetime.strptime(d, "%B %d, %Y")                # Data date
                 t_date: datetime = datetime.strptime(Day.tomorrow.ymd, "%B %d, %Y") # Tomorrow date
                 logging.debug(f"-Comparing local data's tomorrow date ({d_date}) to tomorrow's real date ({t_date})...")
                 if (d_date == t_date):

@@ -80,7 +80,16 @@ class Astrostyle:
         if (req.status_code == 200):
             soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
             content = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
-            date: str = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+            
+            date: str = ""
+            match self.day.day_of_week:
+                case "saturday":
+                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
+                case "sunday":
+                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
+                case _:
+                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+
             return date, content
         else:
             return "", ""
