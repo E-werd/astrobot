@@ -28,26 +28,6 @@ class AstrologyCom:
             self.text = text
             break
 
-    @staticmethod
-    def create_source_structure() -> dict:
-        '''Creates empty data structure for Astrology.com data, should be called from __create_data(), returns dict'''
-        d: dict = {}
-        add: dict = {}
-
-        add = {"name": Source.astrology_com.full, "styles": {}}
-        d.update(add)
-        for style in Source.astrology_com.styles:
-            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
-            d["styles"].update(add)
-            for day in Day.types:
-                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
-                d["styles"][style.name]["days"].update(add)
-                for zodiac in Zodiac.types:
-                    add = {zodiac: ""}
-                    d["styles"][style.name]["days"][day]["signs"].update(add)
-        
-        return d
-
     def __get_url(self, zodiac: Zodiac.Type, style: Style.Type, day: Day.Type) -> str:
         '''Generate url for __fetch, returns str
         :zodiac: Zodiac sign
@@ -55,26 +35,15 @@ class AstrologyCom:
         :day: Day for horoscope'''
         url_return: list[str] = ["https://www.astrology.com/"]
 
-        match style:
-            case Style.daily:
-                match day:
-                    case Day.yesterday | Day.tomorrow:
-                        url_return += ["horoscope/daily/", day.name, "/", zodiac.name, ".html"]
-                        return "".join(url_return)
-                    case Day.today:
-                        url_return += ["horoscope/daily/", zodiac.name, ".html"]
-                        return "".join(url_return)
-                    case _: return "" # This should never happen
-            case Style.daily_love:
-                match day:
-                    case Day.yesterday | Day.tomorrow:
-                        url_return += ["horoscope/daily-love/", day.name, "/", zodiac.name, ".html"]
-                        return "".join(url_return)
-                    case Day.today:
-                        url_return += ["horoscope/daily-love/", zodiac.name, ".html"]
-                        return "".join(url_return)
-                    case _: return "" # This should never happen
-            case _: return "" # This should never happen
+        style_text: dict[Style.Type, str] = {Style.daily:       "horoscope/daily/",
+                                             Style.daily_love:  "horoscope/daily-love/"}
+        
+        day_text: dict[Day.Type, str] = {Day.yesterday: f"{day.name}/{zodiac.name}.html",
+                                         Day.tomorrow:  f"{day.name}/{zodiac.name}.html",
+                                         Day.today:     f"{zodiac.name}.html"}
+        
+        url_return += [style_text[style], day_text[day]]
+        return "".join(url_return)
     
     def __fetch(self, url: str) -> tuple[str, str]:
         '''Retrieve horoscope from source, returns two str: date and text
@@ -95,3 +64,23 @@ class AstrologyCom:
             return date, "".join(s.text for s in content)
         else:
             return "", ""
+        
+    @staticmethod
+    def create_source_structure() -> dict:
+        '''Creates empty data structure for Astrology.com data, should be called from __create_data(), returns dict'''
+        d: dict = {}
+        add: dict = {}
+
+        add = {"name": Source.astrology_com.full, "styles": {}}
+        d.update(add)
+        for style in Source.astrology_com.styles:
+            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
+            d["styles"].update(add)
+            for day in Day.types:
+                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
+                d["styles"][style.name]["days"].update(add)
+                for zodiac in Zodiac.types:
+                    add = {zodiac: ""}
+                    d["styles"][style.name]["days"][day]["signs"].update(add)
+        
+        return d

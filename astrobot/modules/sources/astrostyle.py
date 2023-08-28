@@ -28,41 +28,21 @@ class Astrostyle:
             self.text = text
             break
 
-    @staticmethod
-    def create_source_structure() -> dict:
-        '''Creates empty data structure for AstroStyle data, should be called from __create_data(), returns dict'''
-        d: dict = {}
-        add: dict = {}
-
-        add = {"name": Source.astrostyle.full, "styles": {}}
-        d.update(add)
-        for style in Source.astrostyle.styles:
-            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
-            d["styles"].update(add)
-            for day in Day.types:
-                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
-                d["styles"][style.name]["days"].update(add)
-                for zodiac in Zodiac.types:
-                    add = {zodiac: ""}
-                    d["styles"][style.name]["days"][day]["signs"].update(add)
-        
-        return d
-
     def __get_url(self, zodiac: Zodiac.Type, style: Style.Type, day: Day.Type) -> str:
         '''Generate url for __fetch, returns str
         :zodiac: Zodiac sign
         :style: Horoscope style
         :day: Day for horoscope'''
-        url_return: list[str] = ["https://astrostyle.com/"]
+        url_return: list[str]   = ["https://astrostyle.com/"]
+        days: dict[str, str]    = {"sunday"    : "weekend",
+                                   "monday"    : "monday",
+                                   "tuesday"   : "tuesday",
+                                   "wednesday" : "wednesday",
+                                   "thursday"  : "thursday",
+                                   "friday"    : "friday",
+                                   "saturday"  : "weekend"}
 
-        dayname: str = ""
-        match day.day_of_week:
-                            case "saturday" | "sunday":
-                                dayname = "weekend"
-                            case _:
-                                dayname = day.day_of_week
-
-        url_return += ["horoscopes/daily/", zodiac.name, "/", dayname, "/"]
+        url_return += ["horoscopes/daily/", zodiac.name, "/", days[day.day_of_week], "/"]
         return "".join(url_return)
     
     def __fetch(self, url: str) -> tuple[str, str]:
@@ -93,3 +73,23 @@ class Astrostyle:
             return date, content
         else:
             return "", ""
+        
+    @staticmethod
+    def create_source_structure() -> dict:
+        '''Creates empty data structure for AstroStyle data, should be called from __create_data(), returns dict'''
+        d: dict = {}
+        add: dict = {}
+
+        add = {"name": Source.astrostyle.full, "styles": {}}
+        d.update(add)
+        for style in Source.astrostyle.styles:
+            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
+            d["styles"].update(add)
+            for day in Day.types:
+                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
+                d["styles"][style.name]["days"].update(add)
+                for zodiac in Zodiac.types:
+                    add = {zodiac: ""}
+                    d["styles"][style.name]["days"][day]["signs"].update(add)
+        
+        return d

@@ -29,26 +29,6 @@ class HoroscopeCom:
             self.text = text
             break
 
-    @staticmethod
-    def create_source_structure() -> dict:
-        '''Creates empty data structure for Horoscope.com data, should be called from __create_data(), returns dict'''
-        d: dict = {}
-        add: dict = {}
-
-        add = {"name": Source.horoscope_com.full, "styles": {}}
-        d.update(add)
-        for style in Source.horoscope_com.styles:
-            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
-            d["styles"].update(add)
-            for day in Day.types:
-                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
-                d["styles"][style.name]["days"].update(add)
-                for zodiac in Zodiac.types:
-                    add = {zodiac: ""}
-                    d["styles"][style.name]["days"][day]["signs"].update(add)
-        
-        return d
-
     def __get_url(self, zodiac: Zodiac.Type, style: Style.Type, day: Day.Type) -> str:
         '''Generate url for __fetch, returns str
         :zodiac: Zodiac sign
@@ -56,13 +36,11 @@ class HoroscopeCom:
         :day: Day for horoscope'''
         url_base: str = "https://www.horoscope.com/us/horoscopes/"
 
-        style_text: dict[Style.Type, str] = {Style.daily:       "general/horoscope-general-daily-",
-                                             Style.daily_love:  "love/horoscope-love-daily-"}
-
-        horo_day: dict[Day.Type, str] = {Day.tomorrow:  "tomorrow.aspx",
-                                         Day.today:     "today.aspx",
-                                         Day.yesterday: "yesterday.aspx"}
-        
+        style_text: dict[Style.Type, str]   = {Style.daily:       "general/horoscope-general-daily-",
+                                               Style.daily_love:  "love/horoscope-love-daily-"}
+        horo_day: dict[Day.Type, str]       = {Day.tomorrow:  "tomorrow.aspx",
+                                               Day.today:     "today.aspx",
+                                               Day.yesterday: "yesterday.aspx"}
         sign_number: dict[Zodiac.Type, str] = {Zodiac.aries:       "?sign=1",
                                                Zodiac.taurus:      "?sign=2",
                                                Zodiac.gemini:      "?sign=3",
@@ -79,8 +57,9 @@ class HoroscopeCom:
         url_return: list[str] = [url_base, style_text[style], horo_day[day], sign_number[zodiac]]
         return "".join(url_return)
     
-    @staticmethod
-    def __restore_split(split: list[str]) -> list:
+    def __restore_split(self, split: list[str]) -> list:
+        '''Fix splitting on dashes, they're sometimes used in the text. Returns list
+        :split: list from __fetch()'''
         length: int = len(split)
         new: list[str] = []
 
@@ -119,3 +98,23 @@ class HoroscopeCom:
             return date, content
         else:
             return "", ""
+    
+    @staticmethod
+    def create_source_structure() -> dict:
+        '''Creates empty data structure for Horoscope.com data, should be called from __create_data(), returns dict'''
+        d: dict = {}
+        add: dict = {}
+
+        add = {"name": Source.horoscope_com.full, "styles": {}}
+        d.update(add)
+        for style in Source.horoscope_com.styles:
+            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
+            d["styles"].update(add)
+            for day in Day.types:
+                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
+                d["styles"][style.name]["days"].update(add)
+                for zodiac in Zodiac.types:
+                    add = {zodiac: ""}
+                    d["styles"][style.name]["days"][day]["signs"].update(add)
+        
+        return d
