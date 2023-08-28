@@ -7,8 +7,8 @@ from astrobot.core.datatypes import Day, Source, Style, Zodiac
 class Options:
     @staticmethod
     def choice_zodiac() -> list:
-        out: list[SlashCommandChoice] = []
-        full: str = ""
+        out: list[SlashCommandChoice]   = []
+        full: str                       = ""
 
         for name, obj in Zodiac.types.items():
             full = obj.symbol + " " + obj.full
@@ -18,8 +18,8 @@ class Options:
 
     @staticmethod
     def choice_day() -> list:
-        out: list[SlashCommandChoice] = []
-        full: str = ""
+        out: list[SlashCommandChoice]   = []
+        full: str                       = ""
 
         for name, obj in Day.types.items():
             full = obj.symbol + " " + obj.full
@@ -29,8 +29,8 @@ class Options:
 
     @staticmethod
     def choice_style() -> list:
-        out: list[SlashCommandChoice] = []
-        full: str = ""
+        out: list[SlashCommandChoice]   = []
+        full: str                       = ""
 
         for name, obj in Style.types.items():
             full = obj.symbol + " " + obj.full
@@ -40,7 +40,7 @@ class Options:
 
     @staticmethod
     def choice_source() -> list:
-        out: list[SlashCommandChoice] = []
+        out: list[SlashCommandChoice]   = []
 
         for name, obj in Source.types.items():
             out.append(SlashCommandChoice(name=obj.full, value=name))
@@ -49,7 +49,7 @@ class Options:
     
     @staticmethod
     async def ac_style(source: Source.Type = Source.astrology_com) -> list:
-        out: list[SlashCommandChoice] = []
+        out: list[SlashCommandChoice]   = []
         full: str = ""
 
         for sty in source.styles:
@@ -60,7 +60,7 @@ class Options:
     
     @staticmethod
     async def ac_source(style: Style.Type = Style.daily) -> list:
-        out: list[SlashCommandChoice] = []
+        out: list[SlashCommandChoice]   = []
 
         for name, obj in Source.types.items():
             if (style in obj.styles):

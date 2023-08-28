@@ -12,20 +12,20 @@ class Astrostyle:
         :zodiac: Zodiac sign
         :day: Day for horoscope. Day.Type object, enumerated in Day.types
         :style: Horoscope style. Style.Type object, enumerated in Style.types'''
-        self.day: Day.Type = day
-        self.__url: str = self.__get_url(zodiac=zodiac, style=style, day=self.day)
-        self.date: str = ""
-        self.text: str = ""
+        self.day: Day.Type  = day
+        self.__url: str     = self.__get_url(zodiac=zodiac, style=style, day=self.day)
+        self.date: str      = ""
+        self.text: str      = ""
 
         for i in range(3):
             logging.debug(f"Fetch attempt {i + 1} of 3...")
-            date, text = self.__fetch(url=self.__url)
+            date, text      = self.__fetch(url=self.__url)
             if (text == ""): 
                 logging.debug(f"Bad fetch.")
                 continue
             logging.debug(f"Good fetch.")
-            self.date = date
-            self.text = text
+            self.date       = date
+            self.text       = text
             break
 
     def __get_url(self, zodiac: Zodiac.Type, style: Style.Type, day: Day.Type) -> str:
@@ -41,8 +41,7 @@ class Astrostyle:
                                    "thursday"  : "thursday",
                                    "friday"    : "friday",
                                    "saturday"  : "weekend"}
-
-        url_return += ["horoscopes/daily/", zodiac.name, "/", days[day.day_of_week], "/"]
+        url_return              += ["horoscopes/daily/", zodiac.name, "/", days[day.day_of_week], "/"]
         return "".join(url_return)
     
     def __fetch(self, url: str) -> tuple[str, str]:
@@ -59,16 +58,16 @@ class Astrostyle:
 
         if (req.status_code == 200):
             soup: BeautifulSoup = BeautifulSoup(req.text, "html.parser")
-            content = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
+            content             = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
             
-            date: str = ""
+            date: str           = ""
             match self.day.day_of_week:
                 case "saturday":
-                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
+                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
                 case "sunday":
-                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
+                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
                 case _:
-                    date = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
 
             return date, content
         else:
@@ -77,16 +76,14 @@ class Astrostyle:
     @staticmethod
     def create_source_structure() -> dict:
         '''Creates empty data structure for AstroStyle data, should be called from __create_data(), returns dict'''
-        d: dict = {}
-        add: dict = {}
-
-        add = {"name": Source.astrostyle.full, "styles": {}}
+        d: dict         = {}
+        add: dict       = {"name": Source.astrostyle.full, "styles": {}}
         d.update(add)
         for style in Source.astrostyle.styles:
-            add = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
+            add         = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
             d["styles"].update(add)
             for day in Day.types:
-                add = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
+                add     = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
                 d["styles"][style.name]["days"].update(add)
                 for zodiac in Zodiac.types:
                     add = {zodiac: ""}

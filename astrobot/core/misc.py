@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 # Internal
 from astrobot.core.datatypes import Day
 
+
 class Misc:
     '''Class with miscellaneous static methods'''
 

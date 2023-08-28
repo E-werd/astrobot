@@ -15,16 +15,16 @@ class Bot(AutoShardedClient, Commands):
         :horoscope: Horoscope object'''
 
         # Create Data and Horoscope objects, local dict
-        self.file: Data = data
-        self.data: dict = self.file.data # Only do this the first time, otherwise use self.file.load_data()
-        self.scope: Horoscope = Horoscope(data=self.data)
+        self.file: Data         = data
+        self.data: dict         = self.file.data # Only do this the first time, otherwise use self.file.load_data()
+        self.scope: Horoscope   = Horoscope(data=self.data)
 
         # Call parent class initialization
         super(Bot, self).__init__(token=token, data=self.file)
 
         # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
-        self.data = self.scope.data
-        self.file.data = self.data
+        self.data               = self.scope.data
+        self.file.data          = self.data
         self.file.write_data()
 
     # Listeners
@@ -41,7 +41,7 @@ class Bot(AutoShardedClient, Commands):
     @Task.create(IntervalTrigger(minutes=30))
     async def check_updates(self):
         # Read data from file, check for updates, sync and write back.
-        self.data = self.file.load_data()
-        self.data = self.scope.check_updates(data=self.data)
-        self.file.data = self.data
+        self.data       = self.file.load_data()
+        self.data       = self.scope.check_updates(data=self.data)
+        self.file.data  = self.data
         self.file.write_data()

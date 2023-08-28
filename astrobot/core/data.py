@@ -9,19 +9,19 @@ class Data:
         class Type:
             '''Container class for individual data sources'''
             def __init__(self, name: str, full: str) -> None:
-                self.name: str = name
-                self.full: str = full
-        json: Type = Type(name="json", full="json data")
-        types: dict[str, Type] = {"json": json}
+                self.name: str  = name
+                self.full: str  = full
+        json: Type              = Type(name="json", full="json data")
+        types: dict[str, Type]  = {"json": json}
 
     def __init__(self, file: str, source: Source.Type) -> None:
         '''Class for accessing and manipulating data
         :file: File path for data source
         :source: Data source object. Data.Source.Type object, enumated in Data.Source.sources'''
-        self.path: str = file
-        self.source: Data.Source.Type = source
-        self.data: dict = {}
-        self.data = self.__load_data()
+        self.path: str                  = file
+        self.source: Data.Source.Type   = source
+        self.data: dict                 = {}
+        self.data                       = self.__load_data()
 
     def __load_data(self) -> dict:
         '''Wraps buffering of data from any source. Returns dict'''
