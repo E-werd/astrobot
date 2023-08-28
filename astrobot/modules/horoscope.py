@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime, timedelta
 # Internal
+from astrobot.core.misc import Misc
 from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
@@ -56,7 +57,7 @@ class Horoscope:
         :horo: Horo object'''
         logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.date}, {horo.style.name} from {horo.source.name}")
         
-        day = self.get_day(date=horo.date)
+        day = Misc.get_day(date=horo.date)
 
         match horo.source:
             case Source.astrology_com:             
@@ -102,15 +103,18 @@ class Horoscope:
         '''Checks data, does what is needed to ensure that data is good and up-to-date. Returns dict
         :data: Dict to check and manipulate'''
         data_in: dict = data
-        Day.update_days()
+        now: datetime = Misc.get_date_from_string(string=datetime.now().strftime("%B %d, %Y"))
+        dates: dict[str, datetime] = {Day.yesterday.name   : Misc.get_date_with_offset(date=now, offset=-1),
+                                      Day.today.name       : Misc.get_date_with_offset(date=now, offset=0),
+                                      Day.tomorrow.name    : Misc.get_date_with_offset(date=now, offset=1)}
 
         for _, source in Source.types.items():
             for style in source.styles:
                 logging.info(f"Checking local data from {source.full} for {style.full}...")
                 # Check what data thinks is tomorrow against reality
                 d = data_in["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][Day.tomorrow.name]["date"]
-                d_date: datetime = datetime.strptime(d, "%B %d, %Y")                # Data date
-                t_date: datetime = datetime.strptime(Day.tomorrow.ymd, "%B %d, %Y") # Tomorrow date
+                d_date: datetime = Misc.get_date_from_string(string=d)      # Data date
+                t_date: datetime = Misc.get_date_from_day(day=Day.tomorrow) # Tomorrow date
                 logging.debug(f"-Comparing local data's tomorrow date ({d_date}) to tomorrow's real date ({t_date})...")
                 if (d_date == t_date):
                     logging.info("--Data is current.")
@@ -118,20 +122,20 @@ class Horoscope:
                 
                 # Check what data thinks is tomorrow against what the source thinks is tomorrow
                 logging.debug("Mismatch. Retrieving date from source...")
-                h = Horo(zodiac=Zodiac.aries, date=Day.tomorrow.ymd, style=style, source=source)
+                h = Horo(zodiac=Zodiac.aries, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
                 date, _ = self.__fetch(horo=h)
-                s_date = datetime.strptime(date, "%B %d, %Y") # Source date
+                s_date: datetime = Misc.get_date_from_string(string=date)   # Source date
                 logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
                 if (s_date == d_date):
                     logging.info("--Data is current.") 
                     continue
 
                 # Check if we're out by 1 day
-                d_datep1: datetime = d_date + timedelta(days=1) # Data date, plus 1 day
+                d_datep1: datetime = Misc.get_date_with_offset(date=d_date, offset=1)   # Data date, plus 1 day
                 logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to the day after local data's tomorrow date ({d_datep1})...")
                 if (s_date == d_datep1):
                     # One day behind, move: today->yesterday, tomorrow->today
-                    logging.info("--Data one day behind.") 
+                    logging.info("--Data one day behind.")
                     data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, source=source, style=style, data=data_in) # move today to yesterday
                     data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, source=source, style=style, data=data_in) # move tomorrow to today
                     
@@ -139,7 +143,7 @@ class Horoscope:
                     data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
                 
                 # Check if we're out by 2 days
-                d_datep2: datetime = d_date + timedelta(days=2) # Data date, plus 2 days
+                d_datep2: datetime = Misc.get_date_with_offset(date=d_date, offset=2)   # Data date, plus 2 days
                 logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to two days after local data's tomorrow date ({d_datep2})...")
                 if (s_date == d_datep2): 
                     # Two days behind, move: tomorrow->yesterday
@@ -171,9 +175,9 @@ class Horoscope:
         d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
         for _, zodiac in Zodiac.types.items():
             h = Horo(zodiac=zodiac,
-                        date=day.ymd,
-                        style=style,
-                        source=source)
+                     date=day.ymd,
+                     style=style,
+                     source=source)
             date, text = self.__fetch(horo=h)
             add = {zodiac.name: text}
             d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
@@ -181,24 +185,6 @@ class Horoscope:
             d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
 
         return d
-
-    def get_day(self, date: str) -> Day.Type:
-        datestr: str = datetime.strptime(date, "%B %d, %Y").strftime('%B %d, %Y')
-
-        class Date:
-            tomorrow: str = Day.tomorrow.date.strftime('%B %d, %Y')
-            today: str = Day.today.date.strftime('%B %d, %Y')
-            yesterday: str = Day.yesterday.date.strftime('%B %d, %Y')
-
-        match datestr:
-            case Date.today:
-                return Day.today
-            case Date.tomorrow:
-                return Day.tomorrow
-            case Date.yesterday:
-                return Day.yesterday
-            case _:
-                return Day.today
 
     def get_horoscope(self,
                       data: dict, 
