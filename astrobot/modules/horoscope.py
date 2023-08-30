@@ -46,7 +46,7 @@ class Horoscope:
             logging.debug("Data is empty. Creating structure and fetching...")
             d.update(self.__create_structure())
             Day.update()
-            d       = self.update_all(data=d)
+            d       = self.__update_all(data=d)
         else:
             d       = self.__check_data(data=d)
 
@@ -71,7 +71,45 @@ class Horoscope:
                 h       = HoroscopeCom(zodiac=horo.zodiac, day=day, style=horo.style)
                 return h.date, h.text
             case _: 
-                return "", "Unknown Source" # This should never happen. Update loop with new sources.    
+                return "", "Unknown Source" # This should never happen. Update loop with new sources.
+    
+    def __update_day(self, day: Day.Type,
+                     source: Source.Type,
+                     style: Style.Type,
+                     data: dict) -> dict:
+        '''Updates data for a specific day for all styles. Returns dict
+        :day: day to update
+        :source: source to update from
+        :data: Dict to check and manipulate'''
+        d: dict         = data
+        logging.info(f"Updating all data for {day.full} for {style.full} from {source.full}...")
+
+        add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
+        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
+        for _, zodiac in Zodiac.types.items():
+            h: Horo     = Horo(zodiac=zodiac,
+                               date=day.ymd,
+                               style=style,
+                               source=source)
+            date, text  = self.__fetch(horo=h)
+            add         = {zodiac.name: text}
+            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
+            add         = {"date": date}
+            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
+
+        return d
+    
+    def __update_all(self, data: dict) -> dict:
+        '''Update all data in all styles from all sources for all days. Returns dict
+        :data: Dict holding data'''
+        d: dict = data
+
+        for _, source in Source.types.items():
+            for style in source.styles:
+                for _, day in Day.types.items():
+                    d = self.__update_day(day=day, source=source, style=style, data=d)
+        
+        return d
     
     def __move_data_day(self, 
                         start: Day.Type,
@@ -141,6 +179,7 @@ class Horoscope:
                     
                     # Update: tomorrow
                     data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
+                    continue
                 
                 # Check if we're out by 2 days
                 d_datep2: datetime = Misc.get_date_with_offset(date=d_date, offset=2)   # Data date, plus 2 days
@@ -153,38 +192,14 @@ class Horoscope:
                     # Update: tomorrow + today
                     data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
                     data_in = self.__update_day(day=Day.today, source=source, style=style, data=data_in)
+                    continue
                 
                 # It must all be out of date, update all
                 logging.info("-All data out of date.")
-                data_in = self.update_all(data=data_in)
+                for _, day in Day.types.items():
+                    data_in = self.__update_day(day=day, source=source, style=style, data=data_in)
             
         return data_in
-
-    def __update_day(self, day: Day.Type,
-                     source: Source.Type,
-                     style: Style.Type,
-                     data: dict) -> dict:
-        '''Updates data for a specific day for all styles. Returns dict
-        :day: day to update
-        :source: source to update from
-        :data: Dict to check and manipulate'''
-        d: dict         = data
-        logging.info(f"Updating all data for {day.full}...")
-
-        add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
-        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
-        for _, zodiac in Zodiac.types.items():
-            h: Horo     = Horo(zodiac=zodiac,
-                               date=day.ymd,
-                               style=style,
-                               source=source)
-            date, text  = self.__fetch(horo=h)
-            add         = {zodiac.name: text}
-            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
-            add         = {"date": date}
-            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
-
-        return d
 
     def get_horoscope(self,
                       data: dict, 
@@ -215,16 +230,4 @@ class Horoscope:
         logging.info("Checking for updates...")
         d       = self.__check_data(data=d)
         logging.info("Done.")
-        return d
-    
-    def update_all(self, data: dict) -> dict:
-        '''Update all data in all styles from all sources for all days. Returns dict
-        :data: Dict holding data'''
-        d: dict = data
-
-        for _, source in Source.types.items():
-            for style in source.styles:
-                for _, day in Day.types.items():
-                    d = self.__update_day(day=day, source=source, style=style, data=d)
-        
         return d

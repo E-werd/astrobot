@@ -6,3 +6,4 @@ cache
 *.txt
 test.py
 notes.md
+*.svg
