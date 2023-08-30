@@ -1,5 +1,5 @@
 # External
-import logging
+import logging, random
 from datetime import datetime
 # Internal
 from astrobot.core.misc import Misc
@@ -145,6 +145,7 @@ class Horoscope:
         dates: dict[str, datetime]  = {Day.yesterday.name   : Misc.get_date_with_offset(date=now, offset=-1),
                                        Day.today.name       : Misc.get_date_with_offset(date=now, offset=0),
                                        Day.tomorrow.name    : Misc.get_date_with_offset(date=now, offset=1)}
+        
 
         for _, source in Source.types.items():
             for style in source.styles:
@@ -160,7 +161,8 @@ class Horoscope:
                 
                 # Check what data thinks is tomorrow against what the source thinks is tomorrow
                 logging.debug("Mismatch. Retrieving date from source...")
-                h = Horo(zodiac=Zodiac.aries, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
+                _, sign = random.choice( list( Zodiac.types.items() ) ) # Get random zodiac sign to fetch source date
+                h = Horo(zodiac=sign, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
                 date, _ = self.__fetch(horo=h)
                 s_date: datetime = Misc.get_date_from_string(string=date)   # Source date
                 logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
