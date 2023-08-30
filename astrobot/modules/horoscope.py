@@ -56,7 +56,7 @@ class Horoscope:
     def __fetch(self, horo: Horo) -> tuple[str, str]:
         '''Fetch data from source, return date + text
         :horo: Horo object'''
-        logging.debug(f"Fetching horoscope: {horo.zodiac.name}, {horo.date}, {horo.style.name} from {horo.source.name}")
+        logging.debug(f"Fetching horoscope: {horo.zodiac.full}, {horo.date}, {horo.style.full} from {horo.source.full}")
         
         day: Day.Type   = Misc.get_day(date=horo.date)
 
@@ -150,6 +150,7 @@ class Horoscope:
         for _, source in Source.types.items():
             for style in source.styles:
                 logging.info(f"Checking local data from {source.full} for {style.full}...")
+                
                 # Check what data thinks is tomorrow against reality
                 d = data_in["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][Day.tomorrow.name]["date"]
                 d_date: datetime = Misc.get_date_from_string(string=d)      # Data date
