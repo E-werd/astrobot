@@ -4,6 +4,10 @@ __pycache__
 cache
 *.json
 *.txt
-test.py
+test*
 notes.md
 *.svg
+*.png
+output/
+kerykeion/
+*.xml

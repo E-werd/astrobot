@@ -9,7 +9,7 @@ from astrobot.bot.commands import Commands
 
 class Bot(AutoShardedClient, Commands):
     '''Wrapped class for interactions.py client'''
-    def __init__(self, token: str, data: Data):
+    def __init__(self, token: str, bing_api: str, data: Data):
         '''Wrapped class for interactions.py client
         :token: Token for authentication
         :horoscope: Horoscope object'''
@@ -20,7 +20,8 @@ class Bot(AutoShardedClient, Commands):
         self.scope: Horoscope   = Horoscope(data=self.data)
 
         # Call parent class initialization
-        super(Bot, self).__init__(token=token, data=self.file)
+        AutoShardedClient.__init__(self, token=token)
+        Commands.__init__(self, bing_api=bing_api, data=self.file)
 
         # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
         self.data               = self.scope.data

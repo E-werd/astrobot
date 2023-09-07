@@ -1,19 +1,23 @@
 # External
 import logging
 from interactions import (OptionType, slash_command, slash_option, SlashContext)
+from dateutil.parser import parse
+from datetime import datetime
 # Internal
 from astrobot.core.data import Data
 from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
 from astrobot.bot.options import Options
 from astrobot.modules.horoscope import Horoscope
+from astrobot.modules.chart import ChartUser
 
 
 class Commands:
-    def __init__(self, data: Data) -> None:
+    def __init__(self, bing_api: str, data: Data) -> None:
         # Create Data and Horoscope objects, local dict
         self.file: Data         = data
         self.data: dict         = self.file.data # Only do this the first time, otherwise use self.file.load_data()
         self.scope: Horoscope   = Horoscope(data=self.data)
+        self.bing_api: str      = bing_api
 
     @slash_command(
             name="horoscope",
@@ -65,4 +69,56 @@ class Commands:
         body: str               = hor.text
         msg: str                = " ".join(header) + "\n" + body
         
+        await ctx.send(msg)
+
+    @slash_command(
+        name="chart",
+        description="Get natal chart"
+    )
+    @slash_option(
+            name="location",
+            description="Birth city",
+            opt_type=OptionType.STRING,
+            required=True
+            )
+    @slash_option(
+            name="birthday",
+            description="Birth date, with leading zero (e.g. 07/04/1776) [MM/DD/YYYY]",
+            opt_type=OptionType.STRING,
+            required=True
+            )
+    @slash_option(
+            name="birthtime",
+            description="Birth time, 24-hour format (e.g. 14:30) [HH:MM] -- Optional, will assume 00:00",
+            opt_type=OptionType.STRING,
+            required=False
+            )
+    async def chart(self, ctx: SlashContext, location: str, birthday: str, birthtime: str = "00:00"):
+        # Log request
+        logging.info(f"Received 'chart' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: location: {location}, birthday: {birthday}, birthtime: {birthtime}")
+        
+        # Combine birthday and birthtime, parse and try to get good data.
+        dt_str: str             = birthtime + " " + birthday
+        date: datetime          = parse(timestr=dt_str, fuzzy=True)
+        good_date: str          = date.strftime("%m/%d/%Y")
+        good_time: str          = date.strftime("%H:%M")
+
+        # Gather data
+        user: ChartUser         = ChartUser(
+                                      bing_api=self.bing_api,
+                                      name=ctx.user.display_name,
+                                      location=location,
+                                      birthday=good_date,
+                                      time=good_time
+                                      )
+        chart: list[str]        = user.get_charts_as_str()
+
+        # Format data into a list
+        send: list[str]         = [f"Natal planet and house tables requested by {ctx.user.mention}:", "```"]
+        for s in chart:
+            send.append(s)
+        send.append("```")
+
+        # Put data into single string, send
+        msg: str = "\n".join(send)
         await ctx.send(msg)

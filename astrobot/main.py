@@ -12,12 +12,14 @@ class Main:
     def __init__(self) -> None:
         '''Main class to run AstroBot'''
         self.TOKEN: str     = ""
+        self.BING_API: str  = ""
         self.FILE: str      = ""
         self.LOGLEVEL: str  = ""
         
         # Load environment vars
-        if not self.__load_env():
-            logging.critical("Missing token! Set TOKEN in .env, see .env.example")
+        load, msg = self.__load_env()
+        if not load:
+            logging.critical(msg)
             sys.exit("Exiting.")
 
         # Setup logging
@@ -25,17 +27,23 @@ class Main:
 
         # Setup data and bot
         self.data: Data     = Data(file=self.FILE, source=Data.Source.json)
-        self.bot: Bot       = Bot(token=self.TOKEN, data=self.data)
+        self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API, data=self.data)
 
-    def __load_env(self) -> bool:
+    def __load_env(self) -> tuple[bool, str]:
         '''Loads from .env using dotenv'''
         load_dotenv()
         self.TOKEN: str     = getenv("TOKEN", default="none")
+        self.BING_API: str  = getenv("BING_API", default="none")
         self.FILE: str      = getenv("DATAFILE", default="data.json")
         self.LOGLEVEL: str  = getenv("LOGLEVEL", default="error")
 
-        if (self.TOKEN == "none"): return False
-        else: return True
+        if (self.TOKEN == "none"): 
+            return False, "Missing Discord bot token! Set TOKEN in .env, see .env.example"
+        
+        if (self.BING_API == "none"):
+            return False, "Missing Bing API key! Set BING_API in .env, see .env.example"
+        
+        return True, ""
 
     def __set_logging(self) -> None:
         '''Sets logging options'''
