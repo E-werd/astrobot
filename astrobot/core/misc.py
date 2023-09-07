@@ -5,12 +5,18 @@ from astrobot.core.datatypes import Day
 
 
 class Misc:
-    '''Class with miscellaneous static methods'''
-
+    """Miscellaneous static functions.
+    """
     @staticmethod
     def get_date_from_day(day: Day.Type) -> datetime:
-        '''Get datetime without time. Returns datetime
-        :day: Day.Type object for relative day'''
+        """Get datetime without time.
+
+        Args:
+            day (Day.Type): Relative day from Day.Type
+
+        Returns:
+            datetime: datetime object
+        """
         offset: dict[Day.Type, int] = {Day.yesterday: -1,
                                        Day.today    : 0,
                                        Day.tomorrow : 1}
@@ -23,27 +29,51 @@ class Misc:
     
     @staticmethod
     def get_date_from_string(string: str) -> datetime:
-        '''Get datetime without time from string. Returns datetime
-        :string: Date string'''
+        """Get datetime without time from string.
+
+        Args:
+            string (str): Time string to format
+
+        Returns:
+            datetime: datetime object, time 00:00
+        """
         return datetime.strptime(string, "%B %d, %Y")
     
     @staticmethod
     def get_date_string(date: datetime) -> str:
-        '''Get date string from datetime. Returns str
-        :date: datetime'''
+        """Get date string from datetime.
+
+        Args:
+            date (datetime): Datetime object to turn into a string.
+
+        Returns:
+            str: String, formatted "%B %d, %Y". e.g. "July 04, 1776"
+        """
         return date.strftime("%B %d, %Y")
     
     @staticmethod
     def get_date_with_offset(date: datetime, offset: int) -> datetime:
-        '''Get datetime with offset. Returns datetime
-        :date: Starting datetime
-        :offset: Offset in number of days'''
+        """Get datetime with offset.
+
+        Args:
+            date (datetime): Datetime object to offset
+            offset (int): Offset, number of days
+
+        Returns:
+            datetime: Datetime object, give or take the offset.
+        """
         return date + timedelta(days=offset)
     
     @staticmethod
     def get_day(date: str) -> Day.Type:
-        '''Get day from string. Returns Day.Type
-        :date: date string'''
+        """Get day from string.
+
+        Args:
+            date (str): Date string.
+
+        Returns:
+            Day.Type: Day object.
+        """
         datestr: str = datetime.strptime(date, "%B %d, %Y").strftime('%B %d, %Y')
 
         class Date:
