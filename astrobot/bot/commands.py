@@ -6,6 +6,7 @@ from datetime import datetime
 # Internal
 from astrobot.core.data import Data
 from astrobot.core.datatypes import Day, Source, Style, Horo, ZodiacSign
+from astrobot.core.misc import Misc
 from astrobot.bot.options import Options
 from astrobot.modules.horoscope import Horoscope
 from astrobot.modules.chart import ChartUser
@@ -13,6 +14,12 @@ from astrobot.modules.chart import ChartUser
 
 class Commands:
     def __init__(self, bing_api: str, data: Data) -> None:
+        """Commands for the bot.
+
+        Args:
+        bing_api (str): The Bing API key.
+        data (Data): The Data object holding data.
+        """
         # Create Data and Horoscope objects, local dict
         self.file: Data         = data
         self.data: dict         = self.file.data # Only do this the first time, otherwise use self.file.load_data()
@@ -52,22 +59,31 @@ class Commands:
             choices=Options.choice_source()
             )
     async def horoscope(self, ctx: SlashContext, sign: str, day: str = "today", style: str = "daily", source: str = "astrology_com"):
+        # Prepare data for horoscope fetch
         _sign: ZodiacSign       = ZodiacSign[sign]
         _day: Day               = Day[day]
         _style: Style           = Style[style]
         _source: Source         = Source[source]
+
+        # Log request
         logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
+        # Gather data
         self.data               = self.file.load_data()
         hor: Horo               = self.scope.get_horoscope(sign=_sign, day=_day, source=_source, style=_style, data=self.data)
+
+        # Format data into a list
+        day_of_week: str        = Misc.get_day_of_week_from_day(day=_day).capitalize() + ","
         header: list[str]       = ["### ", 
                                    hor.sign.symbol, hor.sign.full, 
                                    hor.style.symbol, hor.style.full, 
-                                   "for", _day.symbol, hor.date,
+                                   "for", _day.symbol, 
+                                   day_of_week, hor.date,
                                    "from", hor.source.full]
         body: str               = hor.text
+
+        # Put data into single string, send
         msg: str                = " ".join(header) + "\n" + body
-        
         await ctx.send(msg)
 
     @slash_command(

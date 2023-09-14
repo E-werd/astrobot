@@ -27,6 +27,14 @@ class Misc:
     
     @staticmethod
     def get_day_of_week_from_day(day: Day) -> str:
+        """Get the day of the week from a given relative Day object.
+
+        Args:
+            day (Day): _description_
+
+        Returns:
+            str: _description_
+        """
         date = Misc.get_date_from_day(day=day)
         return date.strftime("%A").lower()
     

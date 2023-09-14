@@ -7,6 +7,11 @@ from astrobot.core.datatypes import Day, Source, Style, ZodiacSign
 class Options:
     @staticmethod
     def choice_zodiac() -> list:
+        """Generate choices for zodiac signs.
+
+        Returns:
+            list: A list of slash command choices.
+        """
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
@@ -18,6 +23,11 @@ class Options:
 
     @staticmethod
     def choice_day() -> list:
+        """Generate choices for available days.
+
+        Returns:
+            list: A list of slash command choices.
+        """
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
@@ -29,6 +39,11 @@ class Options:
 
     @staticmethod
     def choice_style() -> list:
+        """Generate choices for horoscope styles.
+
+        Returns:
+            list: A list of slash command choices.
+        """
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
@@ -40,30 +55,14 @@ class Options:
 
     @staticmethod
     def choice_source() -> list:
+        """Generate choices for horoscope sources.
+
+        Returns:
+            list: A list of slash command choices.
+        """
         out: list[SlashCommandChoice]   = []
 
         for source in Source:
             out.append(SlashCommandChoice(name=source.full, value=source.name))
-
-        return out
-    
-    @staticmethod
-    async def ac_style(source: Source = Source.astrology_com) -> list:
-        out: list[SlashCommandChoice]   = []
-        full: str = ""
-
-        for sty in source.styles:
-            full = sty.symbol + " " + sty.full
-            out.append(SlashCommandChoice(name=full, value=sty.name))
-
-        return out
-    
-    @staticmethod
-    async def ac_source(style: Style = Style.daily) -> list:
-        out: list[SlashCommandChoice]   = []
-
-        for source in Source:
-            if (style in source.styles):
-                out.append(SlashCommandChoice(name=source.full, value=source.name))
 
         return out
