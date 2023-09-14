@@ -3,7 +3,7 @@ import logging, random
 from datetime import datetime
 # Internal
 from astrobot.core.misc import Misc
-from astrobot.core.datatypes import Day, Source, Style, Horo, Zodiac
+from astrobot.core.datatypes import Day, Source, Style, Horo, ZodiacSign
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
@@ -11,41 +11,57 @@ from astrobot.modules.sources.horoscopecom import HoroscopeCom
 
 
 class Horoscope:
-    '''Class for working with horoscopes, wraps all sources'''
+    """Work with horoscopes, wraps all sources.
+
+    Returns:
+        _type_: Horoscope object
+    """
     def __init__(self, data: dict) -> None:
-        '''Class for working with horoscopes, wraps all sources
-        :data: Dict of data'''
+        """Work with horoscopes, wraps all sources.
+
+        Args:
+            data (dict): Dictionary with or without data.
+        """
         self.data: dict = data
         self.data       = self.__prep_data(data=self.data)
 
     def __create_structure(self) -> dict:
-        '''Creates empty data structure. Returns dict'''
+        """Creates empty data structure.
+
+        Returns:
+            dict: A formatted dictionary, a shell for data to be inserted into.
+        """
         h: dict     = {"horoscopes": {"sources": {}}}
         add: dict   = {}
 
         logging.debug("Creating data structure...")
-        for source in Source.types:
-            add = {Source.types[source].name: {}}
+        for source in Source:
+            add = {source.name: {}}
             h["horoscopes"]["sources"].update(add)
             match source:
-                case Source.astrology_com.name: # specific to Astrology.com
-                    h["horoscopes"]["sources"][source].update(AstrologyCom.create_source_structure())
-                case Source.astrostyle.name: # specific to AstroStyle
-                    h["horoscopes"]["sources"][source].update(Astrostyle.create_source_structure())
-                case Source.horoscope_com.name: # specific to Horoscope.com
-                    h["horoscopes"]["sources"][source].update(HoroscopeCom.create_source_structure())
+                case Source.astrology_com: # specific to Astrology.com
+                    h["horoscopes"]["sources"][source.name].update(AstrologyCom.create_source_structure())
+                case Source.astrostyle: # specific to AstroStyle
+                    h["horoscopes"]["sources"][source.name].update(Astrostyle.create_source_structure())
+                case Source.horoscope_com: # specific to Horoscope.com
+                    h["horoscopes"]["sources"][source.name].update(HoroscopeCom.create_source_structure())
                 case _: continue # This should never happen. Update loop with new source structures.
         
         return h
     
     def __prep_data(self, data: dict) -> dict:
-        '''Prepares data for use. Returns dict
-        :data: Dict to check and manipulate'''
+        """Prepares data for use.
+
+        Args:
+            data (dict): A dictionary to check and/or update.
+
+        Returns:
+            dict: A dictionary full of data and ready to use.
+        """
         d: dict     = data
         if (d == {}):
             logging.debug("Data is empty. Creating structure and fetching...")
             d.update(self.__create_structure())
-            Day.update()
             d       = self.__update_all(data=d)
         else:
             d       = self.__check_data(data=d)
@@ -54,45 +70,60 @@ class Horoscope:
         return d
         
     def __fetch(self, horo: Horo) -> tuple[str, str]:
-        '''Fetch data from source, return date + text
-        :horo: Horo object'''
-        logging.debug(f"Fetching horoscope: {horo.zodiac.full}, {horo.date}, {horo.style.full} from {horo.source.full}")
+        """Fetch data from source.
+
+        Args:
+            horo (Horo): A prepared Horo object with information required for fetch.
+
+        Returns:
+            tuple[str, str]: A date string and horoscope text, like [date, horoscope].
+        """
+        logging.debug(f"Fetching horoscope: {horo.sign.full}, {horo.date}, {horo.style.full} from {horo.source.full}")
         
-        day: Day.Type   = Misc.get_day(date=horo.date)
+        day: Day    = Misc.get_day(date=horo.date)
 
         match horo.source:
             case Source.astrology_com:             
-                h       = AstrologyCom(zodiac=horo.zodiac, day=day, style=horo.style)
+                h   = AstrologyCom(sign=horo.sign, day=day, style=horo.style)
                 return h.date, h.text
             case Source.astrostyle:
-                h       = Astrostyle(zodiac=horo.zodiac, day=day, style=horo.style)
+                h   = Astrostyle(sign=horo.sign, day=day, style=horo.style)
                 return h.date, h.text
             case Source.horoscope_com:
-                h       = HoroscopeCom(zodiac=horo.zodiac, day=day, style=horo.style)
+                h   = HoroscopeCom(sign=horo.sign, day=day, style=horo.style)
                 return h.date, h.text
             case _: 
                 return "", "Unknown Source" # This should never happen. Update loop with new sources.
     
-    def __update_day(self, day: Day.Type,
-                     source: Source.Type,
-                     style: Style.Type,
+    def __update_day(self, day: Day,
+                     source: Source,
+                     style: Style,
                      data: dict) -> dict:
-        '''Updates data for a specific day for all styles. Returns dict
-        :day: day to update
-        :source: source to update from
-        :data: Dict to check and manipulate'''
+        """Updates data for a specified day for a specified style from a specified source.
+
+        Args:
+            day (Day): The day to update data for.
+            source (Source): The source from which to update data.
+            style (Style): The style to update data for.
+            data (dict): The dictionary where horoscope data is held.
+
+        Returns:
+            dict: The dictionary you provided, updated.
+        """
         d: dict         = data
         logging.info(f"Updating all data for {day.full} for {style.full} from {source.full}...")
 
         add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
         d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
-        for _, zodiac in Zodiac.types.items():
-            h: Horo     = Horo(zodiac=zodiac,
-                               date=day.ymd,
+        for sign in ZodiacSign:
+            date_dt = Misc.get_date_from_day(day=day)
+            date_str = Misc.get_date_string(date=date_dt)
+            h: Horo     = Horo(sign=sign,
+                               date=date_str,
                                style=style,
                                source=source)
             date, text  = self.__fetch(horo=h)
-            add         = {zodiac.name: text}
+            add         = {sign.name: text}
             d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
             add         = {"date": date}
             d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
@@ -100,29 +131,41 @@ class Horoscope:
         return d
     
     def __update_all(self, data: dict) -> dict:
-        '''Update all data in all styles from all sources for all days. Returns dict
-        :data: Dict holding data'''
+        """Update all horoscopes for all styles from all sources for all days.
+
+        Args:
+            data (dict): The dictionary where horoscope data is held.
+
+        Returns:
+            dict: The dictionary you provided, updated.
+        """
         d: dict = data
 
-        for _, source in Source.types.items():
+        for source in Source:
             for style in source.styles:
-                for _, day in Day.types.items():
+                for day in Day:
                     d = self.__update_day(day=day, source=source, style=style, data=d)
         
         return d
     
     def __move_data_day(self, 
-                        start: Day.Type,
-                        dest: Day.Type,
-                        source: Source.Type,
-                        style: Style.Type,
+                        start: Day,
+                        dest: Day,
+                        source: Source,
+                        style: Style,
                         data: dict) -> dict:
-        '''Moves data in buffer, used in update operations. Returns dict
-        :start: source day
-        :dest: destination day
-        :source: source to move
-        :style: style to move
-        :data: Dict to manipulate'''
+        """Moves horoscopes in provided dictionary from the start and to the destination provided.
+
+        Args:
+            start (Day): The day for the horoscopes you'd like to move.
+            dest (Day): The day to which the horoscopes should be moved.
+            source (Source): The source that the days belong to.
+            style (Style): The style that the days belong to.
+            data (dict): The dictionary where horoscope data is held.
+
+        Returns:
+            dict: The dictionary you provided, updated.
+        """
         d: dict             = data
         work: dict          = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"]
         logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{style.full}' from source '{source.full}'...") 
@@ -137,17 +180,23 @@ class Horoscope:
         return d
 
     def __check_data(self, data: dict) -> dict:
-        '''Checks data, does what is needed to ensure that data is good and up-to-date. Returns dict
-        :data: Dict to check and manipulate'''
-        Day.update()
+        """Checks horoscope data and does what is needed to ensure it is up-to-date.
+
+        Args:
+            data (dict): The dictionary where horoscope data is held.
+
+        Returns:
+            dict: The dictionary you provided, updated.
+        """
         data_in: dict               = data
         now: datetime               = Misc.get_date_from_string(string=datetime.now().strftime("%B %d, %Y"))
         dates: dict[str, datetime]  = {Day.yesterday.name   : Misc.get_date_with_offset(date=now, offset=-1),
                                        Day.today.name       : Misc.get_date_with_offset(date=now, offset=0),
                                        Day.tomorrow.name    : Misc.get_date_with_offset(date=now, offset=1)}
-        
 
-        for _, source in Source.types.items():
+        # Iterate through sources
+        for source in Source:
+            # Iterate through styles for the source
             for style in source.styles:
                 logging.info(f"Checking local data from {source.full} for {style.full}...")
                 
@@ -162,8 +211,8 @@ class Horoscope:
                 
                 # Check what data thinks is tomorrow against what the source thinks is tomorrow
                 logging.debug("Mismatch. Retrieving date from source...")
-                _, sign = random.choice( list( Zodiac.types.items() ) ) # Get random zodiac sign to fetch source date
-                h = Horo(zodiac=sign, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
+                sign = random.choice( list(ZodiacSign) ) # Get random zodiac sign to fetch source date
+                h = Horo(sign=sign, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
                 date, _ = self.__fetch(horo=h)
                 s_date: datetime = Misc.get_date_from_string(string=date)   # Source date
                 logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
@@ -199,36 +248,48 @@ class Horoscope:
                 
                 # It must all be out of date, update all
                 logging.info("-All data out of date.")
-                for _, day in Day.types.items():
+                for day in Day:
                     data_in = self.__update_day(day=day, source=source, style=style, data=data_in)
             
         return data_in
 
     def get_horoscope(self,
                       data: dict, 
-                      zodiac: Zodiac.Type, 
-                      day: Day.Type, 
-                      source: Source.Type = Source.astrology_com, 
-                      style: Style.Type = Style.daily
+                      sign: ZodiacSign,
+                      day: Day, 
+                      source: Source = Source.astrology_com, 
+                      style: Style = Style.daily
                       ) -> Horo:
-        '''Get horoscope, returns Horo object
-        :data: Dict to pull from
-        :zodiac: Zodiac sign
-        :day: Day for horoscope
-        :source: Source for horoscope
-        :style: horoscope style'''
+        """Get a horoscope given specified parameters.
+
+        Args:
+            data (dict): The dictionary where horoscope data is held.
+            sign (ZodiacSign): The zodiac sign for the horoscope.
+            day (Day): The day for the horoscope.
+            source (Source, optional): The source from which the horoscope originates. Defaults to Source.astrology_com.
+            style (Style, optional): The style of the horoscope. Defaults to Style.daily.
+
+        Returns:
+            Horo: The populated Horo object.
+        """
         if style not in source.styles:
             style   = source.default_style
         
         d: dict     = data
-        logging.info(f"Getting {style.full} for {zodiac.full} for {day.full}")
-        text: str   = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][zodiac.name]
+        logging.info(f"Getting {style.full} for {sign.full} for {day.full}")
+        text: str   = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][sign.name]
         date: str   = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["date"]
-        return Horo(zodiac=zodiac, date=date, source=source, style=style, text=text)
+        return Horo(sign=sign, date=date, source=source, style=style, text=text)
 
     def check_updates(self, data: dict) -> dict:
-        '''Check for updates, wraps __check_data(). Returns dict
-        :data: Dict to check and manipulate'''
+        """Check for updates to horoscope data.
+
+        Args:
+            data (dict): The dictionary where horoscope data is held.
+
+        Returns:
+            dict: The dictionary you provided, updated.
+        """
         d: dict = data
         logging.info("Checking for updates...")
         d       = self.__check_data(data=d)

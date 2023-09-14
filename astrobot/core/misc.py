@@ -4,28 +4,31 @@ from datetime import datetime, timedelta
 from astrobot.core.datatypes import Day
 
 
+format: str = "%B %d, %Y"
+
 class Misc:
     """Miscellaneous static functions.
     """
     @staticmethod
-    def get_date_from_day(day: Day.Type) -> datetime:
+    def get_date_from_day(day: Day) -> datetime:
         """Get datetime without time.
 
         Args:
-            day (Day.Type): Relative day from Day.Type
+            day (Day): Relative day from Day
 
         Returns:
             datetime: datetime object
         """
-        offset: dict[Day.Type, int] = {Day.yesterday: -1,
-                                       Day.today    : 0,
-                                       Day.tomorrow : 1}
-
-        d = datetime.today() + timedelta(days=offset[day])
-        d_str = datetime.strftime(d, "%B %d, %Y")
-        fin = datetime.strptime(d_str, "%B %d, %Y")
+        d = datetime.today() + timedelta(days=day.value)
+        d_str = datetime.strftime(d, format)
+        fin = datetime.strptime(d_str, format)
 
         return fin
+    
+    @staticmethod
+    def get_day_of_week_from_day(day: Day) -> str:
+        date = Misc.get_date_from_day(day=day)
+        return date.strftime("%A").lower()
     
     @staticmethod
     def get_date_from_string(string: str) -> datetime:
@@ -37,7 +40,7 @@ class Misc:
         Returns:
             datetime: datetime object, time 00:00
         """
-        return datetime.strptime(string, "%B %d, %Y")
+        return datetime.strptime(string, format)
     
     @staticmethod
     def get_date_string(date: datetime) -> str:
@@ -49,7 +52,7 @@ class Misc:
         Returns:
             str: String, formatted "%B %d, %Y". e.g. "July 04, 1776"
         """
-        return date.strftime("%B %d, %Y")
+        return date.strftime(format)
     
     @staticmethod
     def get_date_with_offset(date: datetime, offset: int) -> datetime:
@@ -65,21 +68,21 @@ class Misc:
         return date + timedelta(days=offset)
     
     @staticmethod
-    def get_day(date: str) -> Day.Type:
+    def get_day(date: str) -> Day:
         """Get day from string.
 
         Args:
             date (str): Date string.
 
         Returns:
-            Day.Type: Day object.
+            Day: Day object.
         """
-        datestr: str = datetime.strptime(date, "%B %d, %Y").strftime('%B %d, %Y')
+        datestr: str = datetime.strptime(date, format).strftime(format)
 
         class Date:
-            yesterday: str  = Misc.get_date_from_day(day=Day.yesterday).strftime('%B %d, %Y')
-            today: str      = Misc.get_date_from_day(day=Day.today).strftime('%B %d, %Y')
-            tomorrow: str   = Misc.get_date_from_day(day=Day.tomorrow).strftime('%B %d, %Y')
+            yesterday: str  = Misc.get_date_from_day(day=Day.yesterday).strftime(format)
+            today: str      = Misc.get_date_from_day(day=Day.today).strftime(format)
+            tomorrow: str   = Misc.get_date_from_day(day=Day.tomorrow).strftime(format)
 
         match datestr:
             case Date.today:

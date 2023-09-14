@@ -1,7 +1,7 @@
 # External
 from interactions import SlashCommandChoice
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, Zodiac
+from astrobot.core.datatypes import Day, Source, Style, ZodiacSign
 
 
 class Options:
@@ -10,9 +10,9 @@ class Options:
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
-        for name, obj in Zodiac.types.items():
-            full = obj.symbol + " " + obj.full
-            out.append(SlashCommandChoice(name=full, value=name))
+        for sign in ZodiacSign:
+            full = sign.symbol + " " + sign.full
+            out.append(SlashCommandChoice(name=full, value=sign.name))
 
         return out
 
@@ -21,9 +21,9 @@ class Options:
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
-        for name, obj in Day.types.items():
-            full = obj.symbol + " " + obj.full
-            out.append(SlashCommandChoice(name=full, value=name))
+        for day in Day:
+            full = day.symbol + " " + day.full
+            out.append(SlashCommandChoice(name=full, value=day.name))
 
         return out
 
@@ -32,9 +32,9 @@ class Options:
         out: list[SlashCommandChoice]   = []
         full: str                       = ""
 
-        for name, obj in Style.types.items():
-            full = obj.symbol + " " + obj.full
-            out.append(SlashCommandChoice(name=full, value=name))
+        for style in Style:
+            full = style.symbol + " " + style.full
+            out.append(SlashCommandChoice(name=full, value=style.name))
 
         return out
 
@@ -42,13 +42,13 @@ class Options:
     def choice_source() -> list:
         out: list[SlashCommandChoice]   = []
 
-        for name, obj in Source.types.items():
-            out.append(SlashCommandChoice(name=obj.full, value=name))
+        for source in Source:
+            out.append(SlashCommandChoice(name=source.full, value=source.name))
 
         return out
     
     @staticmethod
-    async def ac_style(source: Source.Type = Source.astrology_com) -> list:
+    async def ac_style(source: Source = Source.astrology_com) -> list:
         out: list[SlashCommandChoice]   = []
         full: str = ""
 
@@ -59,11 +59,11 @@ class Options:
         return out
     
     @staticmethod
-    async def ac_source(style: Style.Type = Style.daily) -> list:
+    async def ac_source(style: Style = Style.daily) -> list:
         out: list[SlashCommandChoice]   = []
 
-        for name, obj in Source.types.items():
-            if (style in obj.styles):
-                out.append(SlashCommandChoice(name=obj.full, value=name))
+        for source in Source:
+            if (style in source.styles):
+                out.append(SlashCommandChoice(name=source.full, value=source.name))
 
         return out

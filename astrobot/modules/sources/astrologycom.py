@@ -2,18 +2,18 @@
 import requests, logging
 from bs4 import BeautifulSoup
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, Zodiac
+from astrobot.core.datatypes import Day, Source, Style, ZodiacSign
 
 
 class AstrologyCom:
     '''Class for working with individual horoscopes from Astrology.com'''
-    def __init__(self, zodiac: Zodiac.Type, day: Day.Type, style: Style.Type) -> None:
+    def __init__(self, sign: ZodiacSign, day: Day, style: Style) -> None:
         '''Class for working with individual horoscopes from Astrology.com
-        :zodiac: Zodiac sign
-        :day: Day for horoscope. Day.Type object, enumerated in Day.types
-        :style: Horoscope style. Style.Type object, enumerated in Style.types'''
-        self.day: Day.Type  = day
-        self.__url: str     = self.__get_url(zodiac=zodiac, style=style, day=self.day)
+        :sign: Zodiac sign
+        :day: Day for horoscope.
+        :style: Horoscope style.'''
+        self.day: Day       = day
+        self.__url: str     = self.__get_url(sign=sign, style=style, day=self.day)
         self.date: str      = ""
         self.text: str      = ""
 
@@ -28,17 +28,17 @@ class AstrologyCom:
             self.text   = text
             break
 
-    def __get_url(self, zodiac: Zodiac.Type, style: Style.Type, day: Day.Type) -> str:
+    def __get_url(self, sign: ZodiacSign, style: Style, day: Day) -> str:
         '''Generate url for __fetch, returns str
-        :zodiac: Zodiac sign
+        :sign: Zodiac sign
         :style: Horoscope style
         :day: Day for horoscope'''
         url_return: list[str]               = ["https://www.astrology.com/"]
-        style_text: dict[Style.Type, str]   = {Style.daily:       "horoscope/daily/",
+        style_text: dict[Style, str]        = {Style.daily:       "horoscope/daily/",
                                                Style.daily_love:  "horoscope/daily-love/"}
-        day_text: dict[Day.Type, str]       = {Day.yesterday: f"{day.name}/{zodiac.name}.html",
-                                               Day.tomorrow:  f"{day.name}/{zodiac.name}.html",
-                                               Day.today:     f"{zodiac.name}.html"}
+        day_text: dict[Day, str]            = {Day.yesterday: f"{day.name}/{sign.name}.html",
+                                               Day.tomorrow:  f"{day.name}/{sign.name}.html",
+                                               Day.today:     f"{sign.name}.html"}
         
         url_return += [style_text[style], day_text[day]]
         return "".join(url_return)
@@ -72,11 +72,11 @@ class AstrologyCom:
         for style in Source.astrology_com.styles:
             add             = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
             d["styles"].update(add)
-            for day in Day.types:
-                add         = {day: {"date": "", "emoji": Day.types[day].symbol, "signs": {}}}
+            for day in Day:
+                add         = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
                 d["styles"][style.name]["days"].update(add)
-                for zodiac in Zodiac.types:
-                    add     = {zodiac: ""}
-                    d["styles"][style.name]["days"][day]["signs"].update(add)
+                for sign in ZodiacSign:
+                    add     = {sign.name: ""}
+                    d["styles"][style.name]["days"][day.name]["signs"].update(add)
         
         return d

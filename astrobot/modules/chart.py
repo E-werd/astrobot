@@ -7,7 +7,7 @@ from kerykeion import AstrologicalSubject, NatalAspects
 from prettytable import PrettyTable
 import pandas as pd
 # Internal
-from astrobot.core.datatypes import Zodiac
+from astrobot.core.datatypes import ZodiacSign
 
 class Table:
     """Holds data used for generating tables.
@@ -101,18 +101,18 @@ class ChartUser:
     Returns:
         ChartUser: A ChartUser object.
     """
-    kery_signs: dict[str, Zodiac.Type]  = {"Ari":   Zodiac.aries,
-                                           "Tau":   Zodiac.taurus,
-                                           "Gem":   Zodiac.gemini,
-                                           "Can":   Zodiac.cancer,
-                                           "Leo":   Zodiac.leo,
-                                           "Vir":   Zodiac.virgo,
-                                           "Lib":   Zodiac.libra,
-                                           "Sco":   Zodiac.scorpio,
-                                           "Sag":   Zodiac.sagittarius,
-                                           "Cap":   Zodiac.capricorn,
-                                           "Aqu":   Zodiac.aquarius,
-                                           "Pis":   Zodiac.pisces}
+    kery_signs: dict[str, ZodiacSign]   = {"Ari":   ZodiacSign.aries,
+                                           "Tau":   ZodiacSign.taurus,
+                                           "Gem":   ZodiacSign.gemini,
+                                           "Can":   ZodiacSign.cancer,
+                                           "Leo":   ZodiacSign.leo,
+                                           "Vir":   ZodiacSign.virgo,
+                                           "Lib":   ZodiacSign.libra,
+                                           "Sco":   ZodiacSign.scorpio,
+                                           "Sag":   ZodiacSign.sagittarius,
+                                           "Cap":   ZodiacSign.capricorn,
+                                           "Aqu":   ZodiacSign.aquarius,
+                                           "Pis":   ZodiacSign.pisces}
     housename: dict[str, str]           = {"First_House":       "1st (ASC)",
                                            "Second_House":      "2nd",
                                            "Third_House":       "3rd",
@@ -202,7 +202,7 @@ class ChartUser:
                 ret  = " R"
 
             # Set data for row
-            sign: Zodiac.Type   = ChartUser.kery_signs[house.sign]
+            sign: ZodiacSign    = ChartUser.kery_signs[house.sign]
             sname: str          = sign.symbol + " " + sign.full
             pname: str          = str("{:.2f}".format(house.position)) + "°" + ret
 
