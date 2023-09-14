@@ -3,7 +3,7 @@ import logging, sys
 from dotenv import load_dotenv
 from os import getenv
 # Internal
-from astrobot.core.data import Data
+from astrobot.core.data import Data, DataSource
 from astrobot.core.bot import Bot
 
 
@@ -26,7 +26,7 @@ class Main:
         self.__set_logging()
 
         # Setup data and bot
-        self.data: Data     = Data(file=self.FILE, source=Data.Source.json)
+        self.data: Data     = Data(file=self.FILE, source=DataSource.json)
         self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API, data=self.data)
 
     def __load_env(self) -> tuple[bool, str]:

@@ -22,7 +22,7 @@ class Commands:
         """
         # Create Data and Horoscope objects, local dict
         self.file: Data         = data
-        self.data: dict         = self.file.data # Only do this the first time, otherwise use self.file.load_data()
+        self.data: dict         = self.file.load_data()
         self.scope: Horoscope   = Horoscope(data=self.data)
         self.bing_api: str      = bing_api
 

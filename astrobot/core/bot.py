@@ -16,7 +16,7 @@ class Bot(AutoShardedClient, Commands):
 
         # Create Data and Horoscope objects, local dict
         self.file: Data         = data
-        self.data: dict         = self.file.data # Only do this the first time, otherwise use self.file.load_data()
+        self.data: dict         = self.file.load_data()
         self.scope: Horoscope   = Horoscope(data=self.data)
 
         # Call parent class initialization
@@ -25,8 +25,7 @@ class Bot(AutoShardedClient, Commands):
 
         # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
         self.data               = self.scope.data
-        self.file.data          = self.data
-        self.file.write_data()
+        self.file.write_data(data=self.data)
 
     # Listeners
     @listen()
@@ -44,5 +43,4 @@ class Bot(AutoShardedClient, Commands):
         # Read data from file, check for updates, sync and write back.
         self.data       = self.file.load_data()
         self.data       = self.scope.check_updates(data=self.data)
-        self.file.data  = self.data
-        self.file.write_data()
+        self.file.write_data(data=self.data)
