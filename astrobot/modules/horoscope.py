@@ -12,9 +12,6 @@ from astrobot.modules.sources.horoscopecom import HoroscopeCom
 
 class Horoscope:
     """Work with horoscopes, wraps all sources.
-
-    Returns:
-        _type_: Horoscope object
     """
     def __init__(self, data: dict) -> None:
         """Work with horoscopes, wraps all sources.

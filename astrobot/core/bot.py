@@ -8,24 +8,19 @@ from astrobot.bot.commands import Commands
 
 
 class Bot(AutoShardedClient, Commands):
-    '''Wrapped class for interactions.py client'''
+    """Wrapped class for interactions.py client.
+    """
     def __init__(self, token: str, bing_api: str, data: Data):
-        '''Wrapped class for interactions.py client
-        :token: Token for authentication
-        :horoscope: Horoscope object'''
+        """Wrapped class for interactions.py client.
 
-        # Create Data and Horoscope objects, local dict
-        self.file: Data         = data
-        self.data: dict         = self.file.load_data()
-        self.scope: Horoscope   = Horoscope(data=self.data)
-
+        Args:
+            token (str): Token for bot authentication.
+            bing_api (str): Pass-through for Bing API key, used for charts.
+            data (Data): Data object for access to stored horoscope data.
+        """
         # Call parent class initialization
         AutoShardedClient.__init__(self, token=token)
-        Commands.__init__(self, bing_api=bing_api, data=self.file)
-
-        # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
-        self.data               = self.scope.data
-        self.file.write_data(data=self.data)
+        Commands.__init__(self, bing_api=bing_api, data=data)
 
     # Listeners
     @listen()
@@ -36,11 +31,3 @@ class Bot(AutoShardedClient, Commands):
     @listen()
     async def on_ready(self):
         logging.info(f"Logged on as: {self.app.name}")
-        
-    # Tasks
-    @Task.create(IntervalTrigger(minutes=30))
-    async def check_updates(self):
-        # Read data from file, check for updates, sync and write back.
-        self.data       = self.file.load_data()
-        self.data       = self.scope.check_updates(data=self.data)
-        self.file.write_data(data=self.data)

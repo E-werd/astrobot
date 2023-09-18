@@ -1,6 +1,6 @@
 # External
 import logging
-from interactions import (OptionType, slash_command, slash_option, SlashContext)
+from interactions import (OptionType, slash_command, slash_option, SlashContext, Task, IntervalTrigger)
 from dateutil.parser import parse
 from datetime import datetime
 # Internal
@@ -26,6 +26,20 @@ class Commands:
         self.scope: Horoscope   = Horoscope(data=self.data)
         self.bing_api: str      = bing_api
 
+        # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
+        self.data               = self.scope.data
+        self.file.write_data(data=self.data)
+
+    # Tasks
+    @Task.create(IntervalTrigger(minutes=30))
+    async def check_updates(self):
+        # Read data from file, check for updates, sync and write back.
+        logging.info("Scheduled task: Checking for updates...")
+        self.data       = self.file.load_data()
+        self.data       = self.scope.check_updates(data=self.data)
+        self.file.write_data(data=self.data)
+
+    # Commands
     @slash_command(
             name="horoscope",
             description="Show horoscope for specified sign"

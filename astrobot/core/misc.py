@@ -4,11 +4,11 @@ from datetime import datetime, timedelta
 from astrobot.core.datatypes import Day
 
 
-format: str = "%B %d, %Y"
-
 class Misc:
     """Miscellaneous static functions.
     """
+    date_format: str = "%B %d, %Y"
+
     @staticmethod
     def get_date_from_day(day: Day) -> datetime:
         """Get datetime without time.
@@ -20,8 +20,8 @@ class Misc:
             datetime: datetime object
         """
         d = datetime.today() + timedelta(days=day.value)
-        d_str = datetime.strftime(d, format)
-        fin = datetime.strptime(d_str, format)
+        d_str = datetime.strftime(d, Misc.date_format)
+        fin = datetime.strptime(d_str, Misc.date_format)
 
         return fin
     
@@ -48,7 +48,7 @@ class Misc:
         Returns:
             datetime: datetime object, time 00:00
         """
-        return datetime.strptime(string, format)
+        return datetime.strptime(string, Misc.date_format)
     
     @staticmethod
     def get_date_string(date: datetime) -> str:
@@ -60,7 +60,7 @@ class Misc:
         Returns:
             str: String, formatted "%B %d, %Y". e.g. "July 04, 1776"
         """
-        return date.strftime(format)
+        return date.strftime(Misc.date_format)
     
     @staticmethod
     def get_date_with_offset(date: datetime, offset: int) -> datetime:
@@ -85,12 +85,12 @@ class Misc:
         Returns:
             Day: Day object.
         """
-        datestr: str = datetime.strptime(date, format).strftime(format)
+        datestr: str = datetime.strptime(date, Misc.date_format).strftime(Misc.date_format)
 
         class Date:
-            yesterday: str  = Misc.get_date_from_day(day=Day.yesterday).strftime(format)
-            today: str      = Misc.get_date_from_day(day=Day.today).strftime(format)
-            tomorrow: str   = Misc.get_date_from_day(day=Day.tomorrow).strftime(format)
+            yesterday: str  = Misc.get_date_from_day(day=Day.yesterday).strftime(Misc.date_format)
+            today: str      = Misc.get_date_from_day(day=Day.today).strftime(Misc.date_format)
+            tomorrow: str   = Misc.get_date_from_day(day=Day.tomorrow).strftime(Misc.date_format)
 
         match datestr:
             case Date.today:

@@ -13,23 +13,35 @@ class DataSource(Enum):
         return self.value
 
 class Data:
-    '''Class for accessing and manipulating data'''
+    """Class for accessing and manipulating data
+    """
     def __init__(self, file: str, source: DataSource) -> None:
-        '''Class for accessing and manipulating data
-        :file: File path for data source
-        :source: Data source object. Data.Source.Type object, enumated in Data.Source.sources'''
+        """Class for accessing and manipulating data.
+
+        Args:
+            file (str): The file path where data is stored as a string.
+            source (DataSource): The source data type.
+        """
         self.path: str                  = file
         self.source: DataSource         = source
 
     def __load_data(self) -> dict:
-        '''Wraps buffering of data from any source. Returns dict'''
+        """Wraps buffering of data from any source.
+
+        Returns:
+            dict: A dict containing data from source.
+        """
         match self.source:
             case DataSource.json:
                 return self.__load_json()
             case _: return {} # This should never happen. Update loop with new data sources.
 
     def __load_json(self) -> dict:
-        '''Buffers json from self.path. Returns dict'''
+        """Buffers JSON from self.path.
+
+        Returns:
+            dict: A dict containing data from source.
+        """
         try:
             logging.info(f"Loading data from file: {self.path}")
             with open(file=self.path, mode="r", encoding="utf-8") as f:
@@ -40,7 +52,11 @@ class Data:
             return {}
 
     def __write_json(self, data: dict) -> None:
-        '''Writes json to self.path from self.data'''
+        """Writes JSON to self.path from self.data.
+
+        Args:
+            data (dict): A dict containing data.
+        """
         try:
             logging.info(f"Writing data to file: {self.path}")
             with open(file=self.path, mode='w', encoding='utf-8') as f:
@@ -49,13 +65,21 @@ class Data:
             logging.error(f"*** File write error: {str(e)}")
 
     def load_data(self) -> dict:
-        '''Load from data source to buffer. Returns dict'''
+        """Wraps __load_data(), loads data from source specified at instantiation.
+
+        Returns:
+            dict: A dict containing data from source.
+        """
         return self.__load_data()
 
     def write_data(self, data: dict) -> None:
-        '''Write buffer to data source'''
+        """Write data back to source file.
+
+        Args:
+            data (dict): A dict containing data.
+        """
         match self.source:
             case DataSource.json: 
                 self.__write_json(data=data)
             case _: 
-                return # This should never happen. Update loop with new data sources.
+                pass # This should never happen. Update loop with new data sources.

@@ -8,9 +8,11 @@ from astrobot.core.bot import Bot
 
 
 class Main:
-    '''Main class to run AstroBot'''
+    """Main class to run AstroBot.
+    """
     def __init__(self) -> None:
-        '''Main class to run AstroBot'''
+        """Main class to run AstroBot.
+        """
         self.TOKEN: str     = ""
         self.BING_API: str  = ""
         self.FILE: str      = ""
@@ -30,7 +32,11 @@ class Main:
         self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API, data=self.data)
 
     def __load_env(self) -> tuple[bool, str]:
-        '''Loads from .env using dotenv'''
+        """Loads from .env using dotenv.
+
+        Returns:
+            tuple[bool, str]: A tuple containing a bool and string. If bad, returns False and a message. Good is True and blank.
+        """
         load_dotenv()
         self.TOKEN: str     = getenv("TOKEN", default="none")
         self.BING_API: str  = getenv("BING_API", default="none")
@@ -46,7 +52,8 @@ class Main:
         return True, ""
 
     def __set_logging(self) -> None:
-        '''Sets logging options'''
+        """Sets logging options and format.
+        """
         logopt: dict[str, int]  = { "debug": logging.DEBUG, "info": logging.INFO, "warning": logging.WARNING , "error": logging.ERROR, "critical": logging.CRITICAL }
         format: str             = "[%(asctime)s.%(msecs)03d][%(levelname)s][%(filename)s:%(lineno)s] %(message)s"
         datefmt: str            = "%Y-%m-%d %H:%M:%S"
@@ -54,5 +61,6 @@ class Main:
         logging.basicConfig(format=format, datefmt=datefmt, level=level)
 
     def start(self) -> None:
-        '''Starts bot'''
+        """Starts the bot.
+        """
         self.bot.start()

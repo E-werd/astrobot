@@ -7,12 +7,16 @@ from astrobot.core.misc import Misc
 
 
 class Astrostyle:
-    '''Class for working with individual horoscopes from Astrostyle.com'''
+    """Class for working with individual horoscopes from Astrostyle.com.
+    """
     def __init__(self, sign: ZodiacSign, day: Day, style: Style) -> None:
-        '''Class for working with individual horoscopes from Astrostyle.com
-        :sign: Zodiac sign
-        :day: Day for horoscope.
-        :style: Horoscope style.'''
+        """Class for working with individual horoscopes from Astrostyle.com.
+
+        Args:
+            sign (ZodiacSign): Zodiac sign to fetch horoscope for.
+            day (Day): Relative day to fetch horoscope for.
+            style (Style): Style of horoscope to fetch.
+        """
         self.day: Day   = day
         self.__url: str = self.__get_url(sign=sign, style=style, day=self.day)
         self.date: str  = ""
@@ -30,10 +34,16 @@ class Astrostyle:
             break
 
     def __get_url(self, sign: ZodiacSign, style: Style, day: Day) -> str:
-        '''Generate url for __fetch, returns str
-        :sign: Zodiac sign
-        :style: Horoscope style
-        :day: Day for horoscope'''
+        """Generate URL for __fetch.
+
+        Args:
+            sign (ZodiacSign): Zodiac sign to fetch horoscope for.
+            style (Style): Relative day to fetch horoscope for.
+            day (Day): Style of horoscope to fetch.
+
+        Returns:
+            str: The URL to fetch from.
+        """
         url_return: list[str]   = ["https://astrostyle.com/"]
         days: dict[str, str]    = {"sunday"    : "weekend",
                                    "monday"    : "monday",
@@ -47,8 +57,14 @@ class Astrostyle:
         return "".join(url_return)
     
     def __fetch(self, url: str) -> tuple[str, str]:
-        '''Retrieve horoscope from source, returns two str: date and text
-        :url: URL from which to fetch horoscope'''
+        """Fetch horoscope from source URL.
+
+        Args:
+            url (str): The URL to fetch from.
+
+        Returns:
+            tuple[str, str]: A two-element string tuple containing a date and horoscope content, respectively.
+        """
         req: requests.Response
 
         try: 
@@ -78,7 +94,11 @@ class Astrostyle:
         
     @staticmethod
     def create_source_structure() -> dict:
-        '''Creates empty data structure for AstroStyle data, should be called from __create_data(), returns dict'''
+        """Creates empty data structure for source data. Should be called from __create_data().
+
+        Returns:
+            dict: Dict containing empty data structure.
+        """
         d: dict         = {}
         add: dict       = {"name": Source.astrostyle.full, "styles": {}}
         d.update(add)

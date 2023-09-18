@@ -7,12 +7,16 @@ from astrobot.core.datatypes import Day, Source, Style, ZodiacSign
 
 
 class HoroscopeCom:
-    '''Class for working with individual horoscopes from Horoscope.com'''
+    """Class for working with individual horoscopes from Horoscope.com.
+    """
     def __init__(self, sign: ZodiacSign, day: Day, style: Style) -> None:
-        '''Class for working with individual horoscopes from Horoscope.com
-        :sign: Zodiac sign
-        :day: Day for horoscope.
-        :style: Horoscope style.'''
+        """Class for working with individual horoscopes from Horoscope.com.
+
+        Args:
+            sign (ZodiacSign): Zodiac sign to fetch horoscope for.
+            day (Day): Relative day to fetch horoscope for.
+            style (Style): Style of horoscope to fetch.
+        """
         self.day: Day       = day
         self.__url: str     = self.__get_url(sign=sign, style=style, day=self.day)
         self.date: str      = ""
@@ -30,10 +34,16 @@ class HoroscopeCom:
             break
 
     def __get_url(self, sign: ZodiacSign, style: Style, day: Day) -> str:
-        '''Generate url for __fetch, returns str
-        :sign: Zodiac sign
-        :style: Horoscope style
-        :day: Day for horoscope'''
+        """Generate URL for __fetch.
+
+        Args:
+            sign (ZodiacSign): Zodiac sign to fetch horoscope for.
+            style (Style): Relative day to fetch horoscope for.
+            day (Day): Style of horoscope to fetch.
+
+        Returns:
+            str: The URL to fetch from.
+        """
         url_base: str                       = "https://www.horoscope.com/us/horoscopes/"
         style_text: dict[Style, str]        = {Style.daily:       "general/horoscope-general-daily-",
                                                Style.daily_love:  "love/horoscope-love-daily-"}
@@ -56,8 +66,14 @@ class HoroscopeCom:
         return "".join(url_return)
     
     def __restore_split(self, split: list[str]) -> list:
-        '''Fix splitting on dashes, they're sometimes used in the text. Returns list
-        :split: list from __fetch()'''
+        """Fix splitting on dashes, they're sometimes used in the content text.
+
+        Args:
+            split (list[str]): The list to fix.
+
+        Returns:
+            list: The fixed list.
+        """
         length: int     = len(split)
         new: list[str]  = []
 
@@ -71,8 +87,14 @@ class HoroscopeCom:
         return new
     
     def __fetch(self, url: str) -> tuple[str, str]:
-        '''Retrieve horoscope from source, returns two str: date and text
-        :url: URL from which to fetch horoscope'''
+        """Fetch horoscope from source URL.
+
+        Args:
+            url (str): The URL to fetch from.
+
+        Returns:
+            tuple[str, str]: A two-element string tuple containing a date and horoscope content, respectively.
+        """
         req: requests.Response
 
         try: 
@@ -99,7 +121,11 @@ class HoroscopeCom:
     
     @staticmethod
     def create_source_structure() -> dict:
-        '''Creates empty data structure for Horoscope.com data, should be called from __create_data(), returns dict'''
+        """Creates empty data structure for source data. Should be called from __create_data().
+
+        Returns:
+            dict: Dict containing empty data structure.
+        """
         d: dict         = {}
         add: dict       = {}
 
