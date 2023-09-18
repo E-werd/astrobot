@@ -110,7 +110,7 @@ class Horoscope:
         d: dict         = data
         logging.info(f"Updating all data for {day.full} for {style.full} from {source.full}...")
 
-        add = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
+        add = {day.name: {"date": "", "signs": {}}}
         d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
         for sign in ZodiacSign:
             date_dt = Misc.get_date_from_day(day=day)

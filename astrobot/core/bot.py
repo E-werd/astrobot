@@ -1,6 +1,6 @@
 # External
 import logging
-from interactions import (AutoShardedClient, listen, Task, IntervalTrigger)
+from interactions import (AutoShardedClient, listen)
 # Internal
 from astrobot.core.data import Data
 from astrobot.modules.horoscope import Horoscope

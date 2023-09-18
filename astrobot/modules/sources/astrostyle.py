@@ -103,10 +103,10 @@ class Astrostyle:
         add: dict       = {"name": Source.astrostyle.full, "styles": {}}
         d.update(add)
         for style in Source.astrostyle.styles:
-            add         = {style.name: {"name": style.full, "emoji": style.symbol, "days": {}}}
+            add         = {style.name: {"name": style.full, "days": {}}}
             d["styles"].update(add)
             for day in Day:
-                add     = {day.name: {"date": "", "emoji": day.symbol, "signs": {}}}
+                add     = {day.name: {"date": "", "signs": {}}}
                 d["styles"][style.name]["days"].update(add)
                 for sign in ZodiacSign:
                     add = {sign.name: ""}
