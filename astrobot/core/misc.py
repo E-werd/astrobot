@@ -30,10 +30,10 @@ class Misc:
         """Get the day of the week from a given relative Day object.
 
         Args:
-            day (Day): _description_
+            day (Day): Relative day from Day
 
         Returns:
-            str: _description_
+            str: A lowercase string for the day of the week.
         """
         date = Misc.get_date_from_day(day=day)
         return date.strftime("%A").lower()

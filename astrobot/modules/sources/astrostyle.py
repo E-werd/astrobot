@@ -43,7 +43,7 @@ class Astrostyle:
                                    "friday"    : "friday",
                                    "saturday"  : "weekend"}
         day_of_week: str        = Misc.get_day_of_week_from_day(day=day)
-        url_return              += ["horoscopes/daily/", sign.name, "/", day_of_week, "/"]
+        url_return              += ["horoscopes/daily/", sign.name, "/", days[day_of_week], "/"]
         return "".join(url_return)
     
     def __fetch(self, url: str) -> tuple[str, str]:
