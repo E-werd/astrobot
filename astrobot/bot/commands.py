@@ -1,6 +1,7 @@
 # External
 import logging
-from interactions import (OptionType, slash_command, slash_option, SlashContext, Task, IntervalTrigger)
+from interactions import (OptionType, slash_command, slash_option, SlashContext, Task, IntervalTrigger, Embed)
+from interactions.ext.paginators import Paginator
 from dateutil.parser import parse
 from datetime import datetime
 # Internal
@@ -140,14 +141,16 @@ class Commands:
                                       birthday=good_date,
                                       time=good_time
                                       )
-        chart: list[str]        = user.get_charts_as_str()
+        charts: dict[str, str]  = user.get_charts_as_str()
 
-        # Format data into a list
-        send: list[str]         = [f"Natal planet and house tables requested by {ctx.user.mention}:", "```"]
-        for s in chart:
-            send.append(s)
-        send.append("```")
+        # Format data into a list of embeds
+        embed: list[Embed] = []
+        for name, chart in charts.items():
+            content: list[str]  = ["```"]
+            content.append(chart)
+            content.append("```")
+            embed.append( Embed(title=name, description="\n".join(content)) )
 
-        # Put data into single string, send
-        msg: str = "\n".join(send)
-        await ctx.send(msg)
+        # Create paginator and send
+        paginator: Paginator    = Paginator.create_from_embeds(ctx.client, *embed)
+        await paginator.send(ctx=ctx)

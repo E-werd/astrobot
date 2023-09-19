@@ -1,4 +1,5 @@
 # External
+from enum import Enum
 from datetime import datetime
 from geopy.geocoders import Bing
 from timezonefinder import TimezoneFinder
@@ -9,32 +10,24 @@ import pandas as pd
 # Internal
 from astrobot.core.datatypes import ZodiacSign
 
-class Table:
-    """Holds data used for generating tables.
+    
+class Table(Enum):
+    """Defines table types and their columns.
     """
-    def __init__(self, name: str, columns: list[str]) -> None:
-        """Holds data used for generating tables.
+    planets     = ["Planet", "Sign", "Position", "House"]
+    houses      = ["House", "Sign", "Position"]
+    aspects     = ["Planet 1", "Aspect", "Planet 2"]
+    elements    = ["Element", "Count"]
+    modes       = ["Modality", "Count"]
 
-        Args:
-            name (str): Name of the table.
-            columns (list[str]): A list of strings representing column names.
+    @property
+    def columns(self):
+        """Columns for table generation.
+
+        Returns:
+            list[str]: A list of strings representing table columns.
         """
-        self.name: str          = name
-        self.columns: list[str] = columns
-
-class TableType:
-    """Static class holding Table objects. Iterator at TableType.all
-    """
-    aspects: Table          = Table(name="aspects", columns=["Planet 1", "Aspect", "Planet 2"])
-    houses: Table           = Table(name="houses", columns=["House", "Sign", "Position"])
-    planets: Table          = Table(name="planets", columns=["Planet", "Sign", "Position", "House"])
-    elements: Table         = Table(name="elements", columns=["Element", "Count"])
-    modes: Table            = Table(name="modes", columns=["Modality", "Count"])
-    all: dict[str, Table]   = {"houses":   houses,
-                               "planets":  planets,
-                               "elements": elements,
-                               "modes":    modes,
-                               "aspects":  aspects}
+        return self.value
 
 class GeoLookup:
     """Look up information about a location.
@@ -156,11 +149,11 @@ class ChartUser:
         self.minute: int            = birthdate.minute
         
         # Build iterator for chart data
-        self.build_data: dict[Table, pd.DataFrame]  = {TableType.houses: self.__build_house_data(subject=self.__make_subject()),
-                                                       TableType.planets: self.__build_planet_data(subject=self.__make_subject()),
-                                                       TableType.elements: self.__build_element_data(subject=self.__make_subject()),
-                                                       TableType.modes: self.__build_mode_data(subject=self.__make_subject()),
-                                                       TableType.aspects: self.__build_aspects_data(subject=self.__make_subject())}
+        self.build_data: dict[Table, pd.DataFrame]  = {Table.houses:    self.__build_house_data(subject=self.__make_subject()),
+                                                       Table.planets:   self.__build_planet_data(subject=self.__make_subject()),
+                                                       Table.elements:  self.__build_element_data(subject=self.__make_subject()),
+                                                       Table.modes:     self.__build_mode_data(subject=self.__make_subject()),
+                                                       Table.aspects:   self.__build_aspects_data(subject=self.__make_subject())}
 
     def __make_subject(self) -> AstrologicalSubject:
         """Gets an AstrologicalSubject object based on data from ChartUser.
@@ -447,15 +440,13 @@ class ChartUser:
         """
         return self.__build_table(table_type=table_type)
     
-    def get_charts_as_str(self) -> list[str]:
+    def get_charts_as_str(self) -> dict[str, str]:
         """Get all charts as a string.
 
         Returns:
             list[str]: A list of string, each item will be a multi-line string formatted by PrettyTable.
         """
-        tables: list[str] = []
-        for name, table in TableType.all.items():
-            if name == "aspects":
-                continue
-            tables.append(self.get_chart_as_str(table_type=table))
+        tables: dict[str, str] = {}
+        for table in Table:
+            tables.update( {table.name.capitalize(): self.get_chart_as_str(table_type=table)} )
         return tables
