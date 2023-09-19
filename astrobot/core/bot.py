@@ -1,9 +1,9 @@
 # External
 import logging
 from interactions import (AutoShardedClient, listen)
+from interactions.api.events import (Startup, Ready)
 # Internal
 from astrobot.core.data import Data
-from astrobot.modules.horoscope import Horoscope
 from astrobot.bot.commands import Commands
 
 
@@ -22,12 +22,12 @@ class Bot(AutoShardedClient, Commands):
         AutoShardedClient.__init__(self, token=token)
         Commands.__init__(self, bing_api=bing_api, data=data)
 
-    # Listeners
-    @listen()
-    async def on_startup(self):
+    # Event Listeners
+    @listen(Startup)
+    async def startup(self):
         logging.info("Starting update check task.")
         self.check_updates.start()
 
-    @listen()
-    async def on_ready(self):
+    @listen(Ready)
+    async def ready(self):
         logging.info(f"Logged on as: {self.app.name}")
