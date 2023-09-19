@@ -1,7 +1,7 @@
 # External
 import logging
 from interactions import (AutoShardedClient, listen)
-from interactions.api.events import (Startup, Ready)
+from interactions.api.events import (Startup, Ready, Login, Disconnect)
 # Internal
 from astrobot.core.data import Data
 from astrobot.bot.commands import Commands
@@ -24,10 +24,18 @@ class Bot(AutoShardedClient, Commands):
 
     # Event Listeners
     @listen(Startup)
-    async def startup(self):
-        logging.info("Starting update check task.")
+    async def event_startup(self):
+        logging.info("STARTUP: Starting update check task.")
         self.check_updates.start()
 
+    @listen(Login)
+    async def event_login(self):
+        logging.info(f"LOGIN: Logged on as: {self.app.name}")
+
     @listen(Ready)
-    async def ready(self):
-        logging.info(f"Logged on as: {self.app.name}")
+    async def event_ready(self):
+        logging.info("READY: Bot is ready.")
+
+    @listen(Disconnect)
+    async def event_disconnect(self):
+        logging.info("DISCONNECT: Stopping bot.")
