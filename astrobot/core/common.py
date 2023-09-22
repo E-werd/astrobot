@@ -34,10 +34,10 @@ class Data:
         Returns:
             dict: A dict containing data from source.
         """
-        match self.source:
-            case DataSource.json:
-                return self.__load_json()
-            case _: return {} # This should never happen. Update loop with new data sources.
+        if (self.source == DataSource.json):
+            return self.__load_json()
+        else: 
+            return {} # This should never happen. Update with new data sources.
 
     def __load_json(self) -> dict:
         """Buffers JSON from self.path.
@@ -81,11 +81,10 @@ class Data:
         Args:
             data (dict): A dict containing data.
         """
-        match self.source:
-            case DataSource.json: 
-                self.__write_json(data=data)
-            case _: 
-                pass # This should never happen. Update loop with new data sources.
+        if (self.source == DataSource.json):
+            return self.__write_json(data=data)
+        else: 
+            pass # This should never happen. Update with new data sources.
 
 class Misc:
     """Miscellaneous static functions.
@@ -175,12 +174,13 @@ class Misc:
             today: str      = Misc.get_date_from_day(day=Day.today).strftime(Misc.date_format)
             tomorrow: str   = Misc.get_date_from_day(day=Day.tomorrow).strftime(Misc.date_format)
 
-        match datestr:
-            case Date.today:
-                return Day.today
-            case Date.tomorrow:
-                return Day.tomorrow
-            case Date.yesterday:
-                return Day.yesterday
-            case _:
-                return Day.today
+        date_match: dict[str, Day]  = {Date.yesterday:  Day.yesterday,
+                                       Date.today:      Day.today,
+                                       Date.tomorrow:   Day.tomorrow}
+        
+        try:
+            ret = date_match[datestr]
+        except KeyError:
+            ret = Day.today
+        
+        return ret

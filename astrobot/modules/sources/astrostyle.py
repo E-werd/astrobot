@@ -82,13 +82,13 @@ class Astrostyle(HoroSource):
             
             date: str           = ""
             day_of_week: str    = Misc.get_day_of_week_from_day(day=self.__day)
-            match day_of_week:
-                case "saturday":
-                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
-                case "sunday":
-                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
-                case _:
-                    date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+ 
+            if (day_of_week == "saturday"):
+                date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
+            elif (day_of_week == "sunday"):
+                date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
+            else:
+                date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
 
             return date, content
         else:
