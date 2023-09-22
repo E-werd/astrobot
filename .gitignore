@@ -8,6 +8,5 @@ test*
 notes.md
 *.svg
 *.png
-output/
-kerykeion/
 *.xml
+.python-version
