@@ -8,7 +8,7 @@ from kerykeion import AstrologicalSubject, NatalAspects
 from prettytable import PrettyTable
 import pandas as pd
 # Internal
-from astrobot.core.datatypes import ZodiacSign
+from astrobot.core.astrology import ZodiacSign
 
     
 class Table(Enum):

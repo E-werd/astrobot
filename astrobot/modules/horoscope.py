@@ -1,15 +1,44 @@
 # External
 import logging, random
 from datetime import datetime
-from abc import ABC
 # Internal
-from astrobot.core.misc import Misc
-from astrobot.core.datatypes import Day, Source, Style, Horo, ZodiacSign, HoroSource
+from astrobot.core.common import Misc
+from astrobot.core.astrology import ZodiacSign
+from astrobot.modules.sources.common import Day, Source, Style
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
 from astrobot.modules.sources.horoscopecom import HoroscopeCom
 
+
+class Horo:
+    """Container class for individual horoscopes.
+    """
+    def __init__(self, 
+                 sign: ZodiacSign, 
+                 date: str, 
+                 text: str              = "",
+                 source: Source         = Source.astrology_com, 
+                 style: Style           = Style.daily
+                 ) -> None:
+        """Container class for individual horoscopes. Served by Horoscope object with get_horoscope().
+
+        Args:
+            sign (ZodiacSign): Zodiac sign.
+            date (str): Formatted date string, use a function from Misc to generate.
+            text (str, optional): Horoscope text. Defaults to "".
+            source (Source, optional): Source of horoscope. Defaults to Source.astrology_com.
+            style (Style, optional): Style of horoscope. Defaults to Style.daily.
+        """
+        self.sign: ZodiacSign       = sign
+        self.date: str              = date
+        self.text: str              = text
+        self.source: Source         = source
+        
+        if style not in source.styles:
+            self.style = source.default_style
+        else:
+            self.style = style
 
 class Horoscope:
     """Work with horoscopes, wraps all sources.

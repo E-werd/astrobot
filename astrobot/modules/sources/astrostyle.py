@@ -2,8 +2,10 @@
 import requests, logging
 from bs4 import BeautifulSoup
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, ZodiacSign, HoroSource
-from astrobot.core.misc import Misc
+from astrobot.core.common import Misc
+from astrobot.core.astrology import ZodiacSign
+from astrobot.modules.horoscope import Source, Style
+from astrobot.modules.sources.common import Day, Source, Style, HoroSource
 
 
 class Astrostyle(HoroSource):

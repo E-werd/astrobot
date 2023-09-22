@@ -1,6 +1,8 @@
 # External
 from abc import ABC
 from enum import Enum
+# Internal
+from astrobot.core.astrology import ZodiacSign
 
 
 class Day(Enum):
@@ -96,71 +98,7 @@ class Source(Enum):
                                                    Source.astrology_com:    Style.daily,
                                                    Source.astrostyle:       Style.daily}
         return defaults[self]
-
-
-class ZodiacSign(Enum):
-    """Enum for describing the Zodiac signs: aries, ..., pisces.
-    """
-    aries       = "♈"
-    taurus      = "♉"
-    gemini      = "♊"
-    cancer      = "♋"
-    leo         = "♌"
-    virgo       = "♍"
-    libra       = "♎"
-    scorpio     = "♏"
-    sagittarius = "♐"
-    capricorn   = "♑"
-    aquarius    = "♒"
-    pisces      = "♓"
-
-    @property
-    def full(self) -> str:
-        """Capitalized version of the name, for presentation.
-
-        Returns:
-            str: The name of the zodiac sign capitalized.
-        """
-        return self.name.capitalize()
     
-    @property
-    def symbol(self) -> str:
-        """Emoji symbol for the zodiac sign. A friendly name for the enum value.
-
-        Returns:
-            str: A UTF8 emoji symbol.
-        """
-        return self.value
-
-class Horo:
-    """Container class for individual horoscopes.
-    """
-    def __init__(self, 
-                 sign: ZodiacSign, 
-                 date: str, 
-                 text: str              = "",
-                 source: Source         = Source.astrology_com, 
-                 style: Style           = Style.daily
-                 ) -> None:
-        """Container class for individual horoscopes. Served by Horoscope object with get_horoscope().
-
-        Args:
-            sign (ZodiacSign): Zodiac sign.
-            date (str): Formatted date string, use a function from Misc to generate.
-            text (str, optional): Horoscope text. Defaults to "".
-            source (Source, optional): Source of horoscope. Defaults to Source.astrology_com.
-            style (Style, optional): Style of horoscope. Defaults to Style.daily.
-        """
-        self.sign: ZodiacSign       = sign
-        self.date: str              = date
-        self.text: str              = text
-        self.source: Source         = source
-        
-        if style not in source.styles:
-            self.style = source.default_style
-        else:
-            self.style = style
-
 class HoroSource(ABC):
     """Abstract class declaring a generic Horoscope Source.
     """

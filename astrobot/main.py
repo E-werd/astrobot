@@ -1,10 +1,10 @@
 # External
 import logging, sys
-from dotenv import load_dotenv
 from os import getenv
+from dotenv import load_dotenv
 # Internal
-from astrobot.core.data import Data, DataSource
 from astrobot.core.bot import Bot
+from astrobot.core.common import Data, DataSource
 
 
 class Main:

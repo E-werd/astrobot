@@ -3,7 +3,7 @@ import logging
 from interactions import (AutoShardedClient, listen)
 from interactions.api.events import (Startup, Ready, Login, Disconnect)
 # Internal
-from astrobot.core.data import Data
+from astrobot.core.common import Data
 from astrobot.bot.commands import Commands
 
 

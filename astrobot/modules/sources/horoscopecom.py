@@ -1,9 +1,11 @@
 # External
 import requests, logging
-from datetime import datetime
 from bs4 import BeautifulSoup
+from datetime import datetime
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, ZodiacSign, HoroSource
+from astrobot.core.astrology import ZodiacSign
+from astrobot.modules.horoscope import Source, Style
+from astrobot.modules.sources.common import Day, Source, Style, HoroSource
 
 
 class HoroscopeCom(HoroSource):
