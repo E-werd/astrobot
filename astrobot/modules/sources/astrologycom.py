@@ -18,8 +18,7 @@ class AstrologyCom(HoroSource):
             day (Day): Relative day to fetch horoscope for.
             style (Style): Style of horoscope to fetch.
         """
-        self.day: Day       = day
-        self.__url: str     = self.__get_url(sign=sign, style=style, day=self.day)
+        self.__url: str     = self.__get_url(sign=sign, style=style, day=day)
         self.date: str      = ""
         self.text: str      = ""
 

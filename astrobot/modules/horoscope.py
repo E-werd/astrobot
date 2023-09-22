@@ -4,7 +4,7 @@ from datetime import datetime
 # Internal
 from astrobot.core.common import Misc
 from astrobot.core.astrology import ZodiacSign
-from astrobot.modules.sources.common import Day, Source, Style
+from astrobot.modules.sources.common import Day, Source, Style, HoroSource
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
