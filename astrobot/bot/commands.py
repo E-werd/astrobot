@@ -88,7 +88,7 @@ class Commands:
         hor: Horo               = self.scope.get_horoscope(sign=_sign, day=_day, source=_source, style=_style, data=self.data)
 
         # Format data into a list
-        day_of_week: str        = Misc.get_day_of_week_from_day(day=_day).capitalize() + ","
+        day_of_week: str        = Misc.get_day_of_week_from_string(string=hor.date).capitalize() + ","
         header: list[str]       = ["### ", 
                                    hor.sign.symbol, hor.sign.full, 
                                    hor.style.symbol, hor.style.full, 

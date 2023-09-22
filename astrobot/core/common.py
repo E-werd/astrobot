@@ -121,6 +121,19 @@ class Misc:
         return date.strftime("%A").lower()
     
     @staticmethod
+    def get_day_of_week_from_string(string: str) -> str:
+        """Get the day of the week from string.
+
+        Args:
+            string (str): Time string to format
+
+        Returns:
+            str: A lowercase string for the day of the week.
+        """
+        dt: datetime = datetime.strptime(string, Misc.date_format)
+        return dt.strftime("%A").lower()
+    
+    @staticmethod
     def get_date_from_string(string: str) -> datetime:
         """Get datetime without time from string.
 
