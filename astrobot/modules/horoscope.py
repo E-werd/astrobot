@@ -1,9 +1,10 @@
 # External
 import logging, random
 from datetime import datetime
+from abc import ABC
 # Internal
 from astrobot.core.misc import Misc
-from astrobot.core.datatypes import Day, Source, Style, Horo, ZodiacSign
+from astrobot.core.datatypes import Day, Source, Style, Horo, ZodiacSign, HoroSource
 # Sources
 from astrobot.modules.sources.astrologycom import AstrologyCom
 from astrobot.modules.sources.astrostyle import Astrostyle
@@ -19,8 +20,11 @@ class Horoscope:
         Args:
             data (dict): Dictionary with or without data.
         """
-        self.data: dict = data
-        self.data       = self.__prep_data(data=self.data)
+        # Declare all possible types for use later
+        self.__source: dict[Source, HoroSource]     = {Source.astrology_com:    AstrologyCom, # type: ignore
+                                                       Source.astrostyle:       Astrostyle,
+                                                       Source.horoscope_com:    HoroscopeCom}
+        self.data: dict                             = self.__prep_data(data=data)
 
     def __create_structure(self) -> dict:
         """Creates empty data structure.
@@ -35,14 +39,7 @@ class Horoscope:
         for source in Source:
             add = {source.name: {}}
             h["horoscopes"]["sources"].update(add)
-            match source:
-                case Source.astrology_com: # specific to Astrology.com
-                    h["horoscopes"]["sources"][source.name].update(AstrologyCom.create_source_structure())
-                case Source.astrostyle: # specific to AstroStyle
-                    h["horoscopes"]["sources"][source.name].update(Astrostyle.create_source_structure())
-                case Source.horoscope_com: # specific to Horoscope.com
-                    h["horoscopes"]["sources"][source.name].update(HoroscopeCom.create_source_structure())
-                case _: continue # This should never happen. Update loop with new source structures.
+            h["horoscopes"]["sources"][source.name].update(self.__source[source].create_source_structure())
         
         return h
     
@@ -76,23 +73,12 @@ class Horoscope:
             tuple[str, str]: A date string and horoscope text, like [date, horoscope].
         """
         logging.debug(f"Fetching horoscope: {horo.sign.full}, {horo.date}, {horo.style.full} from {horo.source.full}")
-        
-        day: Day    = Misc.get_day(date=horo.date)
-
-        match horo.source:
-            case Source.astrology_com:             
-                h   = AstrologyCom(sign=horo.sign, day=day, style=horo.style)
-                return h.date, h.text
-            case Source.astrostyle:
-                h   = Astrostyle(sign=horo.sign, day=day, style=horo.style)
-                return h.date, h.text
-            case Source.horoscope_com:
-                h   = HoroscopeCom(sign=horo.sign, day=day, style=horo.style)
-                return h.date, h.text
-            case _: 
-                return "", "Unknown Source" # This should never happen. Update loop with new sources.
+        day: Day        = Misc.get_day(date=horo.date)
+        h: HoroSource   = self.__source[horo.source](sign=horo.sign, day=day, style=horo.style) # type: ignore
+        return h.date, h.text
     
-    def __update_day(self, day: Day,
+    def __update_day(self, 
+                     day: Day,
                      source: Source,
                      style: Style,
                      data: dict) -> dict:

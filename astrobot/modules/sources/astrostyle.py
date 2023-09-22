@@ -2,11 +2,11 @@
 import requests, logging
 from bs4 import BeautifulSoup
 # Internal
-from astrobot.core.datatypes import Day, Source, Style, ZodiacSign
+from astrobot.core.datatypes import Day, Source, Style, ZodiacSign, HoroSource
 from astrobot.core.misc import Misc
 
 
-class Astrostyle:
+class Astrostyle(HoroSource):
     """Class for working with individual horoscopes from Astrostyle.com.
     """
     def __init__(self, sign: ZodiacSign, day: Day, style: Style) -> None:
@@ -17,8 +17,8 @@ class Astrostyle:
             day (Day): Relative day to fetch horoscope for.
             style (Style): Style of horoscope to fetch.
         """
-        self.day: Day   = day
-        self.__url: str = self.__get_url(sign=sign, style=style, day=self.day)
+        self.__url: str = self.__get_url(sign=sign, style=style, day=day)
+        self.__day: Day = day
         self.date: str  = ""
         self.text: str  = ""
 
@@ -79,7 +79,7 @@ class Astrostyle:
             content             = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
             
             date: str           = ""
-            day_of_week: str    = Misc.get_day_of_week_from_day(day=self.day)
+            day_of_week: str    = Misc.get_day_of_week_from_day(day=self.__day)
             match day_of_week:
                 case "saturday":
                     date        = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
