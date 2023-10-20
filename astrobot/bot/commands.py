@@ -84,8 +84,11 @@ class Commands:
         logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
         # Gather data
-        self.data               = self.file.load_data()
-        hor: Horo               = self.scope.get_horoscope(sign=_sign, day=_day, source=_source, style=_style, data=self.data)
+        # self.data               = self.file.load_data()
+        # hor: Horo               = self.scope.get_horoscope(sign=_sign, day=_day, source=_source, style=_style, data=self.data)
+        from astrobot.revamp.common import HoroItem
+        item: HoroItem          = HoroItem(day=_day, source=_source, style=_style, sign=_sign)
+        hor: Horo               = await item.fetch()
 
         # Format data into a list
         day_of_week: str        = Misc.get_day_of_week_from_string(string=hor.date).capitalize() + ","

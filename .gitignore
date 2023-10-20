@@ -10,3 +10,4 @@ notes.md
 *.png
 *.xml
 .python-version
+*.sqlite
