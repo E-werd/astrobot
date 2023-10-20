@@ -3,30 +3,28 @@ import logging
 from interactions import (AutoShardedClient, listen)
 from interactions.api.events import (Startup, Ready, Login, Disconnect)
 # Internal
-from astrobot.core.common import Data
 from astrobot.bot.commands import Commands
+from astrobot.modules.horoscope import HoroItem
 
 
 class Bot(AutoShardedClient, Commands):
     """Wrapped class for interactions.py client.
     """
-    def __init__(self, token: str, bing_api: str, data: Data):
+    def __init__(self, token: str, bing_api: str):
         """Wrapped class for interactions.py client.
 
         Args:
             token (str): Token for bot authentication.
             bing_api (str): Pass-through for Bing API key, used for charts.
-            data (Data): Data object for access to stored horoscope data.
         """
         # Call parent class initialization
         AutoShardedClient.__init__(self, token=token)
-        Commands.__init__(self, bing_api=bing_api, data=data)
+        Commands.__init__(self, bing_api=bing_api)
 
     # Event Listeners
     @listen(Startup)
     async def event_startup(self):
-        logging.info("STARTUP: Starting update check task.")
-        self.check_updates.start()
+        await HoroItem.precache()
 
     @listen(Login)
     async def event_login(self):

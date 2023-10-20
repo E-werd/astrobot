@@ -2,7 +2,7 @@
 from interactions import SlashCommandChoice
 # Internal
 from astrobot.core.astrology import ZodiacSign
-from astrobot.modules.sources.common import Day, Source, Style
+from astrobot.modules.common import Day, Source, Style
 
 
 class Options:
