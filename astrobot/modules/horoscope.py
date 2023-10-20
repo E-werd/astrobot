@@ -1,14 +1,14 @@
 # External
-import logging, random
-from datetime import datetime
+import logging, asyncio
+import time as timer
+from abc import ABC
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta, time
+from aiohttp_client_cache import CachedSession, SQLiteBackend # type: ignore
 # Internal
 from astrobot.core.common import Misc
 from astrobot.core.astrology import ZodiacSign
-from astrobot.modules.sources.common import Day, Source, Style, HoroSource
-# Sources
-from astrobot.modules.sources.astrologycom import AstrologyCom
-from astrobot.modules.sources.astrostyle import Astrostyle
-from astrobot.modules.sources.horoscopecom import HoroscopeCom
+from astrobot.modules.common import Day, Source, Style
 
 
 class Horo:
@@ -40,270 +40,179 @@ class Horo:
         else:
             self.style = style
 
-class Horoscope:
-    """Work with horoscopes, wraps all sources.
-    """
-    def __init__(self, data: dict) -> None:
-        """Work with horoscopes, wraps all sources.
+class Get(ABC):
+    async def get(self, url: str = "") -> str:
+        fetch: str = ""
 
-        Args:
-            data (dict): Dictionary with or without data.
-        """
-        # Declare all possible types for use later
-        self.__source: dict[Source, HoroSource]     = {Source.astrology_com:    AstrologyCom, # type: ignore
-                                                       Source.astrostyle:       Astrostyle,
-                                                       Source.horoscope_com:    HoroscopeCom}
-        self.data: dict                             = self.__prep_data(data=data)
-
-    def __create_structure(self) -> dict:
-        """Creates empty data structure.
-
-        Returns:
-            dict: A formatted dictionary, a shell for data to be inserted into.
-        """
-        h: dict     = {"horoscopes": {"sources": {}}}
-        add: dict   = {}
-
-        logging.debug("Creating data structure...")
-        for source in Source:
-            add = {source.name: {}}
-            h["horoscopes"]["sources"].update(add)
-            h["horoscopes"]["sources"][source.name].update(self.__source[source].create_source_structure())
-        
-        return h
-    
-    def __prep_data(self, data: dict) -> dict:
-        """Prepares data for use.
-
-        Args:
-            data (dict): A dictionary to check and/or update.
-
-        Returns:
-            dict: A dictionary full of data and ready to use.
-        """
-        d: dict     = data
-        if (d == {}):
-            logging.debug("Data is empty. Creating structure and fetching...")
-            d.update(self.__create_structure())
-            d       = self.__update_all(data=d)
+        if url == "":
+            fetch = self.url # type: ignore
         else:
-            d       = self.__check_data(data=d)
+            fetch = url
 
-        logging.debug(f"Data should be ready.")
-        return d
+        try: 
+            logging.debug(f"Querying URL: {fetch}")
+
+            async with CachedSession(cache=SQLiteBackend(cache_name='astrobot_cache', urls_expire_after=self.urls_expire_after)) as session: # type: ignore
+                response = await session.get(url=fetch)
+
+            return await response.text()
+        except Exception as e: 
+            logging.error(f"*** Query error: {str(e)}")
+            return ""
+
+class UrlBuilder(ABC):
+    def build_url(self, day: Day, source: Source, style: Style, sign: ZodiacSign) -> str:
+        baseurl: dict[Source, str]              = {Source.astrology_com: "https://www.astrology.com/",
+                                                   Source.astrostyle: "https://astrostyle.com/",
+                                                   Source.horoscope_com: "https://www.horoscope.com/us/horoscopes/"}
+        url_return: list[str]                   = [baseurl[source]]
+
+        if source == Source.astrology_com:
+            style_text: dict[Style, str]        = {Style.daily:       "horoscope/daily/",
+                                                   Style.daily_love:  "horoscope/daily-love/"}
+            day_text: dict[Day, str]            = {Day.yesterday: f"{day.name}/{sign.name}.html",
+                                                   Day.tomorrow:  f"{day.name}/{sign.name}.html",
+                                                   Day.today:     f"{sign.name}.html"}
+            url_return                          += [style_text[style], day_text[day]]
+            return "".join(url_return)
         
-    def __fetch(self, horo: Horo) -> tuple[str, str]:
-        """Fetch data from source.
-
-        Args:
-            horo (Horo): A prepared Horo object with information required for fetch.
-
-        Returns:
-            tuple[str, str]: A date string and horoscope text, like [date, horoscope].
-        """
-        logging.debug(f"Fetching horoscope: {horo.sign.full}, {horo.date}, {horo.style.full} from {horo.source.full}")
-        day: Day        = Misc.get_day(date=horo.date)
-        h: HoroSource   = self.__source[horo.source](sign=horo.sign, day=day, style=horo.style) # type: ignore
-        return h.date, h.text
-    
-    def __update_day(self, 
-                     day: Day,
-                     source: Source,
-                     style: Style,
-                     data: dict) -> dict:
-        """Updates data for a specified day for a specified style from a specified source.
-
-        Args:
-            day (Day): The day to update data for.
-            source (Source): The source from which to update data.
-            style (Style): The style to update data for.
-            data (dict): The dictionary where horoscope data is held.
-
-        Returns:
-            dict: The dictionary you provided, updated.
-        """
-        d: dict         = data
-        logging.info(f"Updating all data for {day.full} for {style.full} from {source.full}...")
-
-        add = {day.name: {"date": "", "signs": {}}}
-        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(add)
-        for sign in ZodiacSign:
-            date_dt = Misc.get_date_from_day(day=day)
-            date_str = Misc.get_date_string(date=date_dt)
-            h: Horo     = Horo(sign=sign,
-                               date=date_str,
-                               style=style,
-                               source=source)
-            date, text  = self.__fetch(horo=h)
-            add         = {sign.name: text}
-            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"].update(add)
-            add         = {"date": date}
-            d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name].update(add)
-
-        return d
-    
-    def __update_all(self, data: dict) -> dict:
-        """Update all horoscopes for all styles from all sources for all days.
-
-        Args:
-            data (dict): The dictionary where horoscope data is held.
-
-        Returns:
-            dict: The dictionary you provided, updated.
-        """
-        d: dict = data
-
-        for source in Source:
-            for style in source.styles:
-                for day in Day:
-                    d = self.__update_day(day=day, source=source, style=style, data=d)
+        elif source == Source.astrostyle:
+            days: dict[str, str]                = {"sunday"    : "weekend",
+                                                   "monday"    : "monday",
+                                                   "tuesday"   : "tuesday",
+                                                   "wednesday" : "wednesday",
+                                                   "thursday"  : "thursday",
+                                                   "friday"    : "friday",
+                                                   "saturday"  : "weekend"}
+            day_of_week: str                    = Misc.get_day_of_week_from_day(day=day)
+            url_return                          += ["horoscopes/daily/", sign.name, "/", days[day_of_week], "/"]
+            return "".join(url_return)
         
-        return d
-    
-    def __move_data_day(self, 
-                        start: Day,
-                        dest: Day,
-                        source: Source,
-                        style: Style,
-                        data: dict) -> dict:
-        """Moves horoscopes in provided dictionary from the start and to the destination provided.
+        elif source == Source.horoscope_com:
+            style_text: dict[Style, str]        = {Style.daily:       "general/horoscope-general-daily-",
+                                                   Style.daily_love:  "love/horoscope-love-daily-"}
+            horo_day: dict[Day, str]            = {Day.tomorrow:  "tomorrow.aspx",
+                                                   Day.today:     "today.aspx",
+                                                   Day.yesterday: "yesterday.aspx"}
+            sign_number: dict[ZodiacSign, str]  = {ZodiacSign.aries:       "?sign=1",
+                                                   ZodiacSign.taurus:      "?sign=2",
+                                                   ZodiacSign.gemini:      "?sign=3",
+                                                   ZodiacSign.cancer:      "?sign=4",
+                                                   ZodiacSign.leo:         "?sign=5",
+                                                   ZodiacSign.virgo:       "?sign=6",
+                                                   ZodiacSign.libra:       "?sign=7",
+                                                   ZodiacSign.scorpio:     "?sign=8",
+                                                   ZodiacSign.sagittarius: "?sign=9",
+                                                   ZodiacSign.capricorn:   "?sign=10",
+                                                   ZodiacSign.aquarius:    "?sign=11",
+                                                   ZodiacSign.pisces:      "?sign=12"}
+            url_return                          += [style_text[style], horo_day[day], sign_number[sign]]
+            return "".join(url_return)
+        else:
+            return "" # This shouldn't happen.
+
+class HoroParser(ABC):
+    def __restore_split(self, split: list[str]) -> list:
+        """Fix splitting on dashes, they're sometimes used in the content text.
 
         Args:
-            start (Day): The day for the horoscopes you'd like to move.
-            dest (Day): The day to which the horoscopes should be moved.
-            source (Source): The source that the days belong to.
-            style (Style): The style that the days belong to.
-            data (dict): The dictionary where horoscope data is held.
+            split (list[str]): The list to fix.
 
         Returns:
-            dict: The dictionary you provided, updated.
+            list: The fixed list.
         """
-        d: dict             = data
-        work: dict          = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"]
-        logging.debug(f"Moving data from '{start.name}' to '{dest.name}' for style '{style.full}' from source '{source.full}'...") 
-        start_date: str     = work[start.name]["date"]
-        start_signs: dict   = work[start.name]["signs"]
+        length: int     = len(split)
+        new: list[str]  = []
 
-        work[dest.name].update({"date": start_date})
-        work[dest.name]["signs"].update(start_signs)
+        for i in range(length):
+            if ( i == (length - 1) ):
+                new.append(split[i])
+            else:
+                new.append(split[i])
+                new.append(" - ")
+        
+        return new
 
-        d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"].update(work)
+    def parse_response(self, source: Source, day: Day, text: str) -> tuple[str, str]:
+        parser: str = "html.parser" # BS4 parser engine
 
-        return d
-
-    def __check_data(self, data: dict) -> dict:
-        """Checks horoscope data and does what is needed to ensure it is up-to-date.
-
-        Args:
-            data (dict): The dictionary where horoscope data is held.
-
-        Returns:
-            dict: The dictionary you provided, updated.
-        """
-        data_in: dict               = data
-        now: datetime               = Misc.get_date_from_string(string=datetime.now().strftime("%B %d, %Y"))
-        dates: dict[str, datetime]  = {Day.yesterday.name   : Misc.get_date_with_offset(date=now, offset=-1),
-                                       Day.today.name       : Misc.get_date_with_offset(date=now, offset=0),
-                                       Day.tomorrow.name    : Misc.get_date_with_offset(date=now, offset=1)}
-
-        # Iterate through sources
-        for source in Source:
-            # Iterate through styles for the source
-            for style in source.styles:
-                logging.info(f"Checking local data from {source.full} for {style.full}...")
-                
-                # Check what data thinks is tomorrow against reality
-                d = data_in["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][Day.tomorrow.name]["date"]
-                d_date: datetime = Misc.get_date_from_string(string=d)      # Data date
-                t_date: datetime = Misc.get_date_from_day(day=Day.tomorrow) # Tomorrow date
-                logging.debug(f"-Comparing local data's tomorrow date ({d_date}) to tomorrow's real date ({t_date})...")
-                if (d_date == t_date):
-                    logging.info("--Data is current.")
-                    continue
-                
-                # Check what data thinks is tomorrow against what the source thinks is tomorrow
-                logging.debug("Mismatch. Retrieving date from source...")
-                sign = random.choice( list(ZodiacSign) ) # Get random zodiac sign to fetch source date
-                h = Horo(sign=sign, date=Misc.get_date_string(dates[Day.tomorrow.name]), style=style, source=source)
-                date, _ = self.__fetch(horo=h)
-                s_date: datetime = Misc.get_date_from_string(string=date)   # Source date
-                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to local data's tomorrow date ({d_date})...")
-                if (s_date == d_date):
-                    logging.info("--Data is current.") 
-                    continue
-
-                # Check if we're out by 1 day
-                d_datep1: datetime = Misc.get_date_with_offset(date=d_date, offset=1)   # Data date, plus 1 day
-                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to the day after local data's tomorrow date ({d_datep1})...")
-                if (s_date == d_datep1):
-                    # One day behind, move: today->yesterday, tomorrow->today
-                    logging.info("--Data one day behind.")
-                    data_in = self.__move_data_day(start=Day.today, dest=Day.yesterday, source=source, style=style, data=data_in) # move today to yesterday
-                    data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.today, source=source, style=style, data=data_in) # move tomorrow to today
-                    
-                    # Update: tomorrow
-                    data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
-                    continue
-                
-                # Check if we're out by 2 days
-                d_datep2: datetime = Misc.get_date_with_offset(date=d_date, offset=2)   # Data date, plus 2 days
-                logging.debug(f"-Comparing source data's tomorrow date ({s_date}) to two days after local data's tomorrow date ({d_datep2})...")
-                if (s_date == d_datep2): 
-                    # Two days behind, move: tomorrow->yesterday
-                    logging.info("--Data two days behind.") 
-                    data_in = self.__move_data_day(start=Day.tomorrow, dest=Day.yesterday, source=source, style=style, data=data_in) # move tomorrow to yesterday
-                    
-                    # Update: tomorrow + today
-                    data_in = self.__update_day(day=Day.tomorrow, source=source, style=style, data=data_in)
-                    data_in = self.__update_day(day=Day.today, source=source, style=style, data=data_in)
-                    continue
-                
-                # It must all be out of date, update all
-                logging.info("-All data out of date.")
-                for day in Day:
-                    data_in = self.__update_day(day=day, source=source, style=style, data=data_in)
+        if source == Source.astrology_com:
+            soup: BeautifulSoup = BeautifulSoup(text, parser)
+            content             = soup.find(id="content").find_all("span") # type: ignore
+            date: str           = soup.find(id="content-date").text # type: ignore
+            return date, "".join(s.text for s in content)
+        elif source == Source.astrostyle:
+            soup: BeautifulSoup     = BeautifulSoup(text, parser)
+            content                 = soup.find("div", class_="horoscope-content").find("p").text.strip() # type: ignore
             
-        return data_in
+            date: str               = ""
+            day_of_week: str        = Misc.get_day_of_week_from_day(day=day)
+ 
+            if (day_of_week == "saturday"):
+                date                = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[0].strip() # type: ignore
+            elif (day_of_week == "sunday"):
+                date                = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].split(" - ")[1].strip() # type: ignore
+            else:
+                date                = soup.find("div", class_="horoscope-content").find("h2").text.split("Horoscope for")[1].strip() # type: ignore
+            
+            return date, content
+        elif source == Source.horoscope_com:
+            soup: BeautifulSoup     = BeautifulSoup(text, parser)
+            
+            content_list: list[str] = soup.find("div", class_="main-horoscope").find("p").text.split(" - ")[1:] # type: ignore
+            new                     = self.__restore_split(split=content_list)
+            content                 = "".join(new)
+            
+            date_rough              = soup.find("div", class_="main-horoscope").find("strong").text.strip() # type: ignore
+            date_dt: datetime       = datetime.strptime(date_rough, "%b %d, %Y")
+            date: str               = date_dt.strftime("%B %d, %Y")
+            
+            return date, content
+        else:
+            return "", ""
 
-    def get_horoscope(self,
-                      data: dict, 
-                      sign: ZodiacSign,
-                      day: Day, 
-                      source: Source = Source.astrology_com, 
-                      style: Style = Style.daily
-                      ) -> Horo:
-        """Get a horoscope given specified parameters.
+class HoroItem(Get, UrlBuilder, HoroParser):
+    def __init__(self, day: Day, source: Source, style: Style, sign: ZodiacSign) -> None:
+        self.day: Day                   = day
+        self.source: Source             = source
+        self.style: Style               = style
+        self.sign: ZodiacSign           = sign
+        self.date: str                  = ""
+        self.text: str                  = ""
+        self.url: str                   = self.build_url(day=self.day, 
+                                                         source=self.source, 
+                                                         style=self.style, 
+                                                         sign=self.sign)
+        self.urls_expire_after: dict    = {self.url: self.__get_seconds_to_time(hour=3, minute=15)}
 
-        Args:
-            data (dict): The dictionary where horoscope data is held.
-            sign (ZodiacSign): The zodiac sign for the horoscope.
-            day (Day): The day for the horoscope.
-            source (Source, optional): The source from which the horoscope originates. Defaults to Source.astrology_com.
-            style (Style, optional): The style of the horoscope. Defaults to Style.daily.
-
-        Returns:
-            Horo: The populated Horo object.
-        """
-        if style not in source.styles:
-            style   = source.default_style
+    async def fetch(self) -> Horo:
+        text: str               = await self.get(url=self.url)
+        self.date, self.text    = self.parse_response(source=self.source, day=self.day, text=text)
         
-        d: dict     = data
-        logging.info(f"Getting {style.full} for {sign.full} for {day.full}")
-        text: str   = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["signs"][sign.name]
-        date: str   = d["horoscopes"]["sources"][source.name]["styles"][style.name]["days"][day.name]["date"]
-        return Horo(sign=sign, date=date, source=source, style=style, text=text)
+        return Horo(sign=self.sign, date=self.date, text=self.text, source=self.source, style=self.style)
+    
+    @staticmethod
+    async def precache() -> None:
+        logging.info("Precaching all possible horoscopes...")
+        tic = timer.perf_counter()
 
-    def check_updates(self, data: dict) -> dict:
-        """Check for updates to horoscope data.
+        tasks = []
+        horoscopes: list[HoroItem] = []
 
-        Args:
-            data (dict): The dictionary where horoscope data is held.
+        for day in Day:
+            for source in Source:
+                for style in source.styles:
+                    for sign in ZodiacSign:
+                        horo = HoroItem(day=day, source=source, style=style, sign=sign)
+                        horoscopes.append(horo)
+                        tasks.append(horo.get())
+        await asyncio.gather(*tasks)
 
-        Returns:
-            dict: The dictionary you provided, updated.
-        """
-        d: dict = data
-        logging.info("Checking for updates...")
-        d       = self.__check_data(data=d)
-        logging.info("Done.")
-        return d
+        toc = timer.perf_counter()
+        logging.info(f"Precaching completed! {toc - tic:0.3f}s")
+
+    def __get_seconds_to_time(self, hour: int = 0, minute: int = 0) -> int:
+        tomorrow: datetime  = datetime.today() + timedelta(days=1)
+        future: datetime    = datetime.combine(date=tomorrow, time=time(hour=hour, minute=minute))
+        gap: timedelta      = future - datetime.now()
+        return gap.seconds

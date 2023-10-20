@@ -4,7 +4,6 @@ from os import getenv
 from dotenv import load_dotenv
 # Internal
 from astrobot.core.bot import Bot
-from astrobot.core.common import Data, DataSource
 
 
 class Main:
@@ -15,7 +14,6 @@ class Main:
         """
         self.TOKEN: str     = ""
         self.BING_API: str  = ""
-        self.FILE: str      = ""
         self.LOGLEVEL: str  = ""
         
         # Load environment vars
@@ -28,8 +26,7 @@ class Main:
         self.__set_logging()
 
         # Setup data and bot
-        self.data: Data     = Data(file=self.FILE, source=DataSource.json)
-        self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API, data=self.data)
+        self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API)
 
     def __load_env(self) -> tuple[bool, str]:
         """Loads from .env using dotenv.
@@ -40,7 +37,6 @@ class Main:
         load_dotenv()
         self.TOKEN: str     = getenv("TOKEN", default="none")
         self.BING_API: str  = getenv("BING_API", default="none")
-        self.FILE: str      = getenv("DATAFILE", default="data.json")
         self.LOGLEVEL: str  = getenv("LOGLEVEL", default="error")
 
         if (self.TOKEN == "none"): 

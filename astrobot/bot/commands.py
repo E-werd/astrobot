@@ -3,42 +3,25 @@ import logging
 from datetime import datetime
 from dateutil.parser import parse
 from interactions.ext.paginators import Paginator
-from interactions import (OptionType, slash_command, slash_option, SlashContext, Task, IntervalTrigger, Embed)
+from interactions import (OptionType, slash_command, slash_option, SlashContext, Embed)
 # Internal
 from astrobot.bot.options import Options
-from astrobot.core.common import Data, Misc
+from astrobot.core.common import Misc
 from astrobot.modules.chart import ChartUser
 from astrobot.core.astrology import ZodiacSign
-from astrobot.modules.horoscope import Horo, Horoscope
-from astrobot.modules.sources.common import Day, Source, Style
+from astrobot.modules.horoscope import Horo, HoroItem
+from astrobot.modules.common import Day, Source, Style
 
 
 class Commands:
-    def __init__(self, bing_api: str, data: Data) -> None:
+    def __init__(self, bing_api: str) -> None:
         """Commands for the bot.
 
         Args:
         bing_api (str): The Bing API key.
         data (Data): The Data object holding data.
         """
-        # Create Data and Horoscope objects, local dict
-        self.file: Data         = data
-        self.data: dict         = self.file.load_data()
-        self.scope: Horoscope   = Horoscope(data=self.data)
         self.bing_api: str      = bing_api
-
-        # Instantiation of Horoscope updates data we sent, return it to local dict and file; write.
-        self.data               = self.scope.data
-        self.file.write_data(data=self.data)
-
-    # Tasks
-    @Task.create(IntervalTrigger(minutes=30))
-    async def check_updates(self):
-        # Read data from file, check for updates, sync and write back.
-        logging.info("Scheduled task: Checking for updates...")
-        self.data       = self.file.load_data()
-        self.data       = self.scope.check_updates(data=self.data)
-        self.file.write_data(data=self.data)
 
     # Commands
     @slash_command(
@@ -84,8 +67,8 @@ class Commands:
         logging.info(f"Received 'horoscope' request from '{ctx.user.username}' [{ctx.author_id}] with parameters: sign: {_sign.name}, day: {_day.name}, style: {_style.name}, source: {_source.name}")
 
         # Gather data
-        self.data               = self.file.load_data()
-        hor: Horo               = self.scope.get_horoscope(sign=_sign, day=_day, source=_source, style=_style, data=self.data)
+        item: HoroItem          = HoroItem(day=_day, source=_source, style=_style, sign=_sign)
+        hor: Horo               = await item.fetch()
 
         # Format data into a list
         day_of_week: str        = Misc.get_day_of_week_from_string(string=hor.date).capitalize() + ","
