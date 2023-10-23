@@ -55,6 +55,9 @@ class Get(ABC):
             async with CachedSession(cache=SQLiteBackend(cache_name='astrobot_cache', urls_expire_after=self.urls_expire_after)) as session: # type: ignore
                 response = await session.get(url=fetch)
 
+            if response.from_cache:
+                logging.info(f"Response from cache, expires at {response.expires.strftime('%Y-%m-%d %H:%M:%S')}")
+
             return await response.text()
         except Exception as e: 
             logging.error(f"*** Query error: {str(e)}")
@@ -183,7 +186,7 @@ class HoroItem(Get, UrlBuilder, HoroParser):
                                                          source=self.source, 
                                                          style=self.style, 
                                                          sign=self.sign)
-        self.urls_expire_after: dict    = {self.url: self.__get_seconds_to_time(hour=3, minute=15)}
+        self.urls_expire_after: dict    = {self.url: self.__get_expiration_datetime(hour=3, minute=5)}
 
     async def fetch(self) -> Horo:
         text: str               = await self.get(url=self.url)
@@ -211,8 +214,11 @@ class HoroItem(Get, UrlBuilder, HoroParser):
         toc = timer.perf_counter()
         logging.info(f"Precaching completed! {toc - tic:0.3f}s")
 
-    def __get_seconds_to_time(self, hour: int = 0, minute: int = 0) -> int:
-        tomorrow: datetime  = datetime.today() + timedelta(days=1)
-        future: datetime    = datetime.combine(date=tomorrow, time=time(hour=hour, minute=minute))
-        gap: timedelta      = future - datetime.now()
-        return gap.seconds
+    def __get_expiration_datetime(self, hour: int = 0, minute: int = 0) -> datetime:
+        today: datetime     = datetime.combine(date=datetime.today(), time=time(hour=hour, minute=minute))
+        tomorrow: datetime  = today + timedelta(days=1)
+
+        if datetime.now().time() > today.time():
+            return tomorrow
+        else:
+            return today
