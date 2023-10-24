@@ -6,7 +6,6 @@ from interactions.ext.paginators import Paginator
 from interactions import (OptionType, slash_command, slash_option, SlashContext, Embed)
 # Internal
 from astrobot.bot.options import Options
-from astrobot.core.common import Misc
 from astrobot.modules.chart import ChartUser
 from astrobot.core.astrology import ZodiacSign
 from astrobot.modules.horoscope import Horo, HoroItem
@@ -70,19 +69,12 @@ class Commands:
         item: HoroItem          = HoroItem(day=_day, source=_source, style=_style, sign=_sign)
         hor: Horo               = await item.fetch()
 
-        # Format data into a list
-        day_of_week: str        = Misc.get_day_of_week_from_string(string=hor.date).capitalize() + ","
-        header: list[str]       = ["### ", 
-                                   hor.sign.symbol, hor.sign.full, 
-                                   hor.style.symbol, hor.style.full, 
-                                   "for", _day.symbol, 
-                                   day_of_week, hor.date,
-                                   "from", hor.source.full]
-        body: str               = hor.text
+        if hor.cache.is_cached:
+                logging.info(f"Response from cache, expires at {hor.cache.expires.strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+                logging.info(f"Response retrieved from source")
 
-        # Put data into single string, send
-        msg: str                = " ".join(header) + "\n" + body
-        await ctx.send(msg)
+        await ctx.send(hor.get_formatted_string())
 
     @slash_command(
         name="chart",

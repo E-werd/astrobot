@@ -1,8 +1,5 @@
 # External
-from abc import ABC
 from enum import Enum
-# Internal
-from astrobot.core.astrology import ZodiacSign
 
 
 class Day(Enum):
@@ -98,21 +95,3 @@ class Source(Enum):
                                                    Source.astrology_com:    Style.daily,
                                                    Source.astrostyle:       Style.daily}
         return defaults[self]
-    
-class HoroSource(ABC):
-    """Abstract class declaring a generic Horoscope Source.
-    """
-    def __init__(self, sign: ZodiacSign, day: Day, style: Style) -> None:
-        """Abstract class declaring a generic Horoscope Source.
-        """
-        self.date = ""
-        self.text = ""
-
-    @staticmethod
-    def create_source_structure() -> dict: # type: ignore
-        """Creates empty data structure for source data. Should be called from __create_data().
-
-        Returns:
-            dict: Dict containing empty data structure.
-        """
-        pass

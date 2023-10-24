@@ -5,16 +5,23 @@ from abc import ABC
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, time
 from aiohttp_client_cache import CachedSession, SQLiteBackend # type: ignore
+from aiohttp_client_cache.response import CachedResponse
 # Internal
 from astrobot.core.common import Misc
 from astrobot.core.astrology import ZodiacSign
 from astrobot.modules.common import Day, Source, Style
 
 
+class CacheStatus:
+    def __init__(self, cached: bool, expires: datetime) -> None:
+        self.is_cached: bool    = cached
+        self.expires: datetime  = expires
+
 class Horo:
     """Container class for individual horoscopes.
     """
-    def __init__(self, 
+    def __init__(self,
+                 cache: CacheStatus,
                  sign: ZodiacSign, 
                  date: str, 
                  text: str              = "",
@@ -30,6 +37,7 @@ class Horo:
             source (Source, optional): Source of horoscope. Defaults to Source.astrology_com.
             style (Style, optional): Style of horoscope. Defaults to Style.daily.
         """
+        self.cache: CacheStatus     = cache
         self.sign: ZodiacSign       = sign
         self.date: str              = date
         self.text: str              = text
@@ -40,8 +48,23 @@ class Horo:
         else:
             self.style = style
 
+    def get_formatted_string(self) -> str:
+        # Format data into a list
+        day_of_week: str        = Misc.get_day_of_week_from_string(string=self.date).capitalize() + ","
+        _day: Day               = Misc.get_day(date=self.date)
+        header: list[str]       = ["### ", 
+                                   self.sign.symbol, self.sign.full, 
+                                   self.style.symbol, self.style.full, 
+                                   "for", _day.symbol, 
+                                   day_of_week, self.date,
+                                   "from", self.source.full]
+        body: str               = self.text
+
+        # Put data into single string, send
+        return " ".join(header) + "\n" + body
+
 class Get(ABC):
-    async def get(self, url: str = "") -> str:
+    async def get(self, url: str = "") -> CachedResponse:
         fetch: str = ""
 
         if url == "":
@@ -53,15 +76,13 @@ class Get(ABC):
             logging.debug(f"Querying URL: {fetch}")
 
             async with CachedSession(cache=SQLiteBackend(cache_name='astrobot_cache', urls_expire_after=self.urls_expire_after)) as session: # type: ignore
-                response = await session.get(url=fetch)
+                response: CachedResponse = await CachedResponse.from_client_response(await session.get(url=fetch))
 
-            if response.from_cache:
-                logging.info(f"Response from cache, expires at {response.expires.strftime('%Y-%m-%d %H:%M:%S')}")
+            return response
 
-            return await response.text()
         except Exception as e: 
             logging.error(f"*** Query error: {str(e)}")
-            return ""
+            return response # type: ignore
 
 class UrlBuilder(ABC):
     def build_url(self, day: Day, source: Source, style: Style, sign: ZodiacSign) -> str:
@@ -188,32 +209,6 @@ class HoroItem(Get, UrlBuilder, HoroParser):
                                                          sign=self.sign)
         self.urls_expire_after: dict    = {self.url: self.__get_expiration_datetime(hour=3, minute=5)}
 
-    async def fetch(self) -> Horo:
-        text: str               = await self.get(url=self.url)
-        self.date, self.text    = self.parse_response(source=self.source, day=self.day, text=text)
-        
-        return Horo(sign=self.sign, date=self.date, text=self.text, source=self.source, style=self.style)
-    
-    @staticmethod
-    async def precache() -> None:
-        logging.info("Precaching all possible horoscopes...")
-        tic = timer.perf_counter()
-
-        tasks = []
-        horoscopes: list[HoroItem] = []
-
-        for day in Day:
-            for source in Source:
-                for style in source.styles:
-                    for sign in ZodiacSign:
-                        horo = HoroItem(day=day, source=source, style=style, sign=sign)
-                        horoscopes.append(horo)
-                        tasks.append(horo.get())
-        await asyncio.gather(*tasks)
-
-        toc = timer.perf_counter()
-        logging.info(f"Precaching completed! {toc - tic:0.3f}s")
-
     def __get_expiration_datetime(self, hour: int = 0, minute: int = 0) -> datetime:
         today: datetime     = datetime.combine(date=datetime.today(), time=time(hour=hour, minute=minute))
         tomorrow: datetime  = today + timedelta(days=1)
@@ -222,3 +217,62 @@ class HoroItem(Get, UrlBuilder, HoroParser):
             return tomorrow
         else:
             return today
+
+    async def fetch(self) -> Horo:
+        response: CachedResponse    = await self.get(url=self.url)
+
+        if response.from_cache:
+            cache = CacheStatus(cached=True, expires=response.expires) # type: ignore
+        else:
+            cache = CacheStatus(cached=False, expires=datetime.today())
+
+        text = await response.text()
+        self.date, self.text        = self.parse_response(source=self.source, day=self.day, text=text)
+        
+        return Horo(cache=cache, sign=self.sign, date=self.date, text=self.text, source=self.source, style=self.style)
+    
+    @staticmethod
+    async def __list_all() -> list:
+        horoscopes: list[HoroItem] = []
+
+        for day in Day:
+            for source in Source:
+                for style in source.styles:
+                    for sign in ZodiacSign:
+                        horo = HoroItem(day=day, source=source, style=style, sign=sign)
+                        horoscopes.append(horo)
+
+        return horoscopes
+    
+    @staticmethod
+    async def precache() -> None:
+        logging.info("Precaching all possible horoscopes...")
+        tic = timer.perf_counter()
+
+        responses = []
+        horoscopes: list[HoroItem] = await HoroItem.__list_all()
+        for horo in horoscopes:
+            responses.append(horo.get())
+        await asyncio.gather(*responses)
+
+        toc = timer.perf_counter()
+        logging.info(f"Precaching completed! {toc - tic:0.3f}s")
+
+    @staticmethod
+    async def get_all() -> list:
+        await HoroItem.precache()
+
+        logging.info("Processing all horoscope responses...")
+        tic = timer.perf_counter()
+
+        tasks = []
+        horocopes: list[HoroItem] = await HoroItem.__list_all()
+
+        for horo in horocopes:
+            tasks.append(horo.fetch())
+        horos: list[Horo] = await asyncio.gather(*tasks)
+
+        toc = timer.perf_counter()
+        logging.info(f"Processing completed! {toc - tic:0.3f}s")
+
+        return horos
