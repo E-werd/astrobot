@@ -221,10 +221,10 @@ class HoroItem(Get, UrlBuilder, HoroParser):
     async def fetch(self) -> Horo:
         response: CachedResponse    = await self.get(url=self.url)
 
-        if response.from_cache:
+        if response.expires != None:
             cache = CacheStatus(cached=True, expires=response.expires) # type: ignore
         else:
-            cache = CacheStatus(cached=False, expires=datetime.today())
+            cache = CacheStatus(cached=False, expires=datetime.now())
 
         text = await response.text()
         self.date, self.text        = self.parse_response(source=self.source, day=self.day, text=text)

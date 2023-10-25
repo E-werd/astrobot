@@ -70,7 +70,7 @@ class Commands:
         hor: Horo               = await item.fetch()
 
         if hor.cache.is_cached:
-                logging.info(f"Response from cache, expires at {hor.cache.expires.strftime('%Y-%m-%d %H:%M:%S')}")
+                logging.info(f"Response retrieved from cache, expires at {hor.cache.expires.strftime('%Y-%m-%d %H:%M:%S')}")
         else:
                 logging.info(f"Response retrieved from source")
 
