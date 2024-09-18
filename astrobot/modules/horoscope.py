@@ -25,6 +25,7 @@ class Horo:
                  sign: ZodiacSign, 
                  date: str, 
                  text: str              = "",
+                 url: str               = "",
                  source: Source         = Source.astrology_com, 
                  style: Style           = Style.daily
                  ) -> None:
@@ -41,6 +42,7 @@ class Horo:
         self.sign: ZodiacSign       = sign
         self.date: str              = date
         self.text: str              = text
+        self.url: str               = url
         self.source: Source         = source
         
         if style not in source.styles:
@@ -57,7 +59,7 @@ class Horo:
                                    self.style.symbol, self.style.full, 
                                    "for", _day.symbol, 
                                    day_of_week, self.date,
-                                   "from", self.source.full]
+                                   "from", f"[{self.source.full}](<{self.url}>)"]
         body: str               = self.text
 
         # Put data into single string, send
@@ -229,7 +231,7 @@ class HoroItem(Get, UrlBuilder, HoroParser):
         text = await response.text()
         self.date, self.text        = self.parse_response(source=self.source, day=self.day, text=text)
         
-        return Horo(cache=cache, sign=self.sign, date=self.date, text=self.text, source=self.source, style=self.style)
+        return Horo(cache=cache, sign=self.sign, date=self.date, text=self.text, url=self.url, source=self.source, style=self.style)
     
     @staticmethod
     async def __list_all() -> list:
