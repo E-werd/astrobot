@@ -3,8 +3,8 @@ from enum import Enum
 from datetime import datetime
 from geopy.geocoders import Bing
 from timezonefinder import TimezoneFinder
-from pycountry import pycountry
-from kerykeion import AstrologicalSubject, NatalAspects
+import pycountry
+from kerykeion import AstrologicalSubject, NatalAspects, KerykeionPointModel
 from prettytable import PrettyTable
 import pandas as pd
 # Internal
@@ -149,11 +149,38 @@ class ChartUser:
         self.minute: int            = birthdate.minute
         
         # Build iterator for chart data
-        self.build_data: dict[Table, pd.DataFrame]  = {Table.houses:    self.__build_house_data(subject=self.__make_subject()),
-                                                       Table.planets:   self.__build_planet_data(subject=self.__make_subject()),
-                                                       Table.elements:  self.__build_element_data(subject=self.__make_subject()),
-                                                       Table.modes:     self.__build_mode_data(subject=self.__make_subject()),
-                                                       Table.aspects:   self.__build_aspects_data(subject=self.__make_subject())}
+        subject: AstrologicalSubject = self.__make_subject()
+        self.planets: dict[str, KerykeionPointModel]    = {"Sun":          subject.sun, #type: ignore
+                                                           "Moon":         subject.moon,
+                                                           "Mercury":      subject.mercury,
+                                                           "Venus":        subject.venus,
+                                                           "Mars":         subject.mars,
+                                                           "Jupiter":      subject.jupiter,
+                                                           "Saturn":       subject.saturn,
+                                                           "Uranus":       subject.uranus,
+                                                           "Neptune":      subject.neptune,
+                                                           "Pluto":        subject.pluto,
+                                                           "Mean_Node":    subject.mean_node,
+                                                           "True_Node":    subject.true_node,
+                                                           "Chiron":       subject.chiron,
+                                                           "Mean_Lilith":  subject.mean_lilith}
+        self.houses: dict[str, KerykeionPointModel]     =  {"First_House":       subject.first_house,
+                                                            "Second_House":      subject.second_house,
+                                                            "Third_House":       subject.third_house,
+                                                            "Fourth_House":      subject.fourth_house,
+                                                            "Fifth_House":       subject.fifth_house,
+                                                            "Sixth_House":       subject.sixth_house,
+                                                            "Seventh_House":     subject.seventh_house,
+                                                            "Eighth_House":      subject.eighth_house,
+                                                            "Ninth_House":       subject.ninth_house,
+                                                            "Tenth_House":       subject.tenth_house,
+                                                            "Eleventh_House":    subject.eleventh_house,
+                                                            "Twelfth_House":     subject.twelfth_house}
+        self.build_data: dict[Table, pd.DataFrame]      = {Table.houses:    self.__build_house_data(subject=subject),
+                                                           Table.planets:   self.__build_planet_data(subject=subject),
+                                                           Table.elements:  self.__build_element_data(subject=subject),
+                                                           Table.modes:     self.__build_mode_data(subject=subject),
+                                                           Table.aspects:   self.__build_aspects_data(subject=subject)}
 
     def __make_subject(self) -> AstrologicalSubject:
         """Gets an AstrologicalSubject object based on data from ChartUser.
@@ -188,19 +215,19 @@ class ChartUser:
         signs: list[str]        = []
         positions: list[str]    = []
 
-        for house in subject.houses_list:
+        for house in subject.houses_names_list:
             # Set retrograde
             ret: str = ""
-            if house.retrograde:
+            if self.houses[house].retrograde:
                 ret  = " R"
 
             # Set data for row
-            sign: ZodiacSign    = ChartUser.kery_signs[house.sign]
+            sign: ZodiacSign    = ChartUser.kery_signs[self.houses[house].sign]
             sname: str          = sign.symbol + " " + sign.full
-            pname: str          = str("{:.2f}".format(house.position)) + "°" + ret
+            pname: str          = str("{:.2f}".format(self.houses[house].position)) + "°" + ret
 
             # Assign data to row
-            houses.append(ChartUser.housename[house.name])
+            houses.append(ChartUser.housename[self.houses[house].name])
             signs.append(sname)
             positions.append(pname)
         
@@ -223,28 +250,28 @@ class ChartUser:
         positions: list = []
         houses: list    = []
         
-        for planet in subject.planets_list:
+        for planet in subject.planets_names_list:
             # Skip unwanted planets
-            if planet.name == "Mean_Node":
+            if planet == "Mean_Node":
                 continue
 
             # Set retrograde
             ret: str = ""
-            if planet.retrograde:
+            if self.planets[planet].retrograde:
                 ret = " R"
 
             # Filter and rename planet names for Planet
             pname: str = ""
-            if planet.name == "True_Node":
+            if planet == "True_Node":
                 pname = "N Node"
             else:
-                pname = planet.name
+                pname = planet
             
             # Prepare strings
-            sign         = ChartUser.kery_signs[planet.sign]
+            sign         = ChartUser.kery_signs[self.planets[planet].sign]
             sname: str   = sign.symbol + " " + sign.full
-            posname: str = str("{:.2f}".format(planet.position)) + "°" + ret
-            hname: str   = ChartUser.housename[str(planet.house)]
+            posname: str = str("{:.2f}".format(self.planets[planet].position)) + "°" + ret
+            hname: str   = ChartUser.housename[str(self.planets[planet].house)]
 
             # Assign data to row
             planets.append(pname)
@@ -274,15 +301,15 @@ class ChartUser:
                                         "Fire":     0,
                                         "Earth":    0,
                                         "Water":    0}
-        
+
         # Iterate through planets
-        for planet in subject.planets_list:
+        for planet in subject.planets_names_list:
             # Skip unwanted planets
-            if planet.name == "Mean_Node":
+            if planet == "Mean_Node":
                 continue
 
             # Increment count for element
-            element_list[planet.element] += 1
+            element_list[self.planets[planet].element] += 1
 
         # Iterate through elements, assign data to row
         for element, count in element_list.items():
@@ -312,13 +339,13 @@ class ChartUser:
                                     "Mutable":  0}
         
         # Iterate through planets
-        for planet in subject.planets_list:
+        for planet in subject.planets_names_list:
             # Skip unwanted planets
-            if planet.name == "Mean_Node":
+            if planet == "Mean_Node":
                 continue
             
             # Increment count for modality
-            modality[planet.quality] += 1
+            modality[self.planets[planet].quality] += 1
 
         # Iterate through modes, assign data to row
         for mode, count in modality.items():
