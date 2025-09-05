@@ -13,14 +13,14 @@ from astrobot.modules.common import Day, Source, Style
 
 
 class Commands:
-    def __init__(self, bing_api: str) -> None:
+    def __init__(self, geo_api: str) -> None:
         """Commands for the bot.
 
         Args:
-        bing_api (str): The Bing API key.
+        geo_api (str): The Geocoder API key.
         data (Data): The Data object holding data.
         """
-        self.bing_api: str      = bing_api
+        self.geo_api: str      = geo_api
 
     # Commands
     @slash_command(
@@ -110,7 +110,7 @@ class Commands:
 
         # Gather data
         user: ChartUser         = ChartUser(
-                                      bing_api=self.bing_api,
+                                      geo_api=self.geo_api,
                                       name=ctx.user.display_name,
                                       location=location,
                                       birthday=good_date,

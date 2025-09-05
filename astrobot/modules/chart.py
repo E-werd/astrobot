@@ -1,7 +1,8 @@
 # External
+import logging
 from enum import Enum
 from datetime import datetime
-from geopy.geocoders import Bing
+from geopy.geocoders import HereV7
 from timezonefinder import TimezoneFinder
 import pycountry
 from kerykeion import AstrologicalSubject, NatalAspects, KerykeionPointModel
@@ -35,26 +36,25 @@ class GeoLookup:
     Returns:
         GeoLookup: A GeoLookup object.
     """
-    def __init__(self, bing_api: str, query: str) -> None:
+    def __init__(self, geo_api: str, query: str) -> None:
         """Look up information about a location.
 
         Args:
-            bing_api (str): API key for Bing.
+            geo_api (str): API key for Geocoder.
             query (str): A lookup string, e.g. "New York City", "Paris, France"
         """
-        ## Get raw data from Bing
-        bing_apikey: str        = bing_api
-        self.raw: dict          = self.__lookup(api_key=bing_apikey, query=query)
+        ## Get raw data from Here
+        geo_apikey: str        = geo_api
+        self.raw: dict          = self.__lookup(api_key=geo_apikey, query=query)
 
         ## Set lat/lon and location names
-        self.latitude: float    = float( self.raw["point"]["coordinates"][0])
-        self.longitude: float   = float( self.raw["point"]["coordinates"][1])
-        self.location: str      = self.raw["address"]["formattedAddress"]
-        self.city: str          = self.raw["address"]["locality"]
+        self.latitude: float    = float( self.raw["position"]["lat"] )
+        self.longitude: float   = float( self.raw["position"]["lng"] )
+        self.city: str          = self.raw["address"]["city"]
 
         # Get locale and translate to 2-letter country name
-        locale: str             = self.raw["address"]["countryRegion"]
-        country_obj             = pycountry.countries.get(name=locale)
+        locale: str             = self.raw["address"]["countryCode"]
+        country_obj             = pycountry.countries.get(alpha_3=locale)
         self.country: str       = country_obj.alpha_2
         
         # Get timezone from coords
@@ -64,14 +64,14 @@ class GeoLookup:
         """Perform lookup on location string.
 
         Args:
-            api_key (str): API key for Bing.
+            api_key (str): API key for Here.
             query (str): A lookup string, e.g. "New York City", "Paris, France"
 
         Returns:
             dict: A dictionary of raw data, derived from JSON response.
         """
-        geo: Bing   = Bing(api_key=api_key)
-        location    = geo.geocode(query=query)
+        geo: HereV7 = HereV7(apikey=api_key)
+        location    = geo.geocode(query=query, exactly_one=True)
         return location.raw # type: ignore
     
     def __get_tz(self, lat: float, lon: float) -> str:
@@ -119,11 +119,11 @@ class ChartUser:
                                            "Eleventh_House":    "11th",
                                            "Twelfth_House":     "12th"}
 
-    def __init__(self, bing_api: str, name: str, location: str, birthday: str, time: str = "00:00") -> None:
+    def __init__(self, geo_api: str, name: str, location: str, birthday: str, time: str = "00:00") -> None:
         """Object containing data and methods used to generate astrological charts.
 
         Args:
-            bing_api (str): API key for Bing, used by GeoLookup class.
+            geo_api (str): API key for Geocoder, used by GeoLookup class.
             name (str): Name of subject.
             location (str): Location of subject.
             birthday (str): Birthday of subject.
@@ -132,11 +132,11 @@ class ChartUser:
         # Set name of subject
         self.name: str              = name
         
-        # Get data from Bing, set location variables
-        lookup: GeoLookup           = GeoLookup(bing_api=bing_api, query=location)
+        # Get data from Here, set location variables
+        lookup: GeoLookup           = GeoLookup(geo_api=geo_api, query=location)
         self.latitude: float        = lookup.latitude
         self.longitude: float       = lookup.longitude
-        self.location: str          = lookup.location
+        self.city: str              = lookup.city
         self.country: str           = lookup.country
         self.timezone: str          = lookup.timezone
         
@@ -197,7 +197,7 @@ class ChartUser:
                                    lat=self.latitude, 
                                    lng=self.longitude, 
                                    tz_str=self.timezone,
-                                   city=self.location,
+                                   city=self.city,
                                    nation=self.country,
                                    online=False)
     

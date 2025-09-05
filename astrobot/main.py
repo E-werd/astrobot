@@ -13,7 +13,7 @@ class Main:
         """Main class to run AstroBot.
         """
         self.TOKEN: str     = ""
-        self.BING_API: str  = ""
+        self.GEO_API: str  = ""
         self.LOGLEVEL: str  = ""
         
         # Load environment vars
@@ -26,7 +26,7 @@ class Main:
         self.__set_logging()
 
         # Setup data and bot
-        self.bot: Bot       = Bot(token=self.TOKEN, bing_api=self.BING_API)
+        self.bot: Bot       = Bot(token=self.TOKEN, geo_api=self.GEO_API)
 
     def __load_env(self) -> tuple[bool, str]:
         """Loads from .env using dotenv.
@@ -36,14 +36,14 @@ class Main:
         """
         load_dotenv()
         self.TOKEN: str     = getenv("TOKEN", default="none")
-        self.BING_API: str  = getenv("BING_API", default="none")
+        self.GEO_API: str  = getenv("GEO_API", default="none")
         self.LOGLEVEL: str  = getenv("LOGLEVEL", default="error")
 
         if (self.TOKEN == "none"): 
             return False, "Missing Discord bot token! Set TOKEN in .env, see .env.example"
         
-        if (self.BING_API == "none"):
-            return False, "Missing Bing API key! Set BING_API in .env, see .env.example"
+        if (self.GEO_API == "none"):
+            return False, "Missing Geocoder API key! Set GEO_API in .env, see .env.example"
         
         return True, ""
 

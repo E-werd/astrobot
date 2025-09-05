@@ -8,6 +8,6 @@ Bot code based on [interactions.py](https://interactions-py.github.io/interactio
 
 Adds the ```/horoscope``` and ```/chart``` commands.  The horoscope data is scraped from three sources: Astrology.com, Horoscope.com, and AstroStyle.com. HTTP responses are cached locally to avoid unnececssary hits to the sources.
 
-Requires tokens for Discord and Bing in ```.env```, see [.env.example](.env.example).
+Requires tokens/keys for Discord and Here in ```.env```, see [.env.example](.env.example).
 
 Run with ```python3 -m astrobot``` or ```run.sh```.
