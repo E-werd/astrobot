@@ -55,7 +55,7 @@ class GeoLookup:
         # Get locale and translate to 2-letter country name
         locale: str             = self.raw["address"]["countryCode"]
         country_obj             = pycountry.countries.get(alpha_3=locale)
-        self.country: str       = country_obj.alpha_2
+        self.country: str       = country_obj.alpha_2 # type: ignore
         
         # Get timezone from coords
         self.timezone: str      = self.__get_tz(lat=self.latitude, lon=self.longitude)
@@ -432,7 +432,7 @@ class ChartUser:
 
         # Iterate through rows
         for _, data in df.iterrows():
-            tbl.add_row(data)
+            tbl.add_row(data)  # type: ignore
         
         # Return table as string
         return tbl.get_string()
